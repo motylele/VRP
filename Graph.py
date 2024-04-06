@@ -79,8 +79,8 @@ class Graph:
             raise ValueError("No edge is found for removal.")
 
         self.graph.remove_edge(u, v)
-        self.adj_matrix[u][v] = 0
-        self.adj_matrix[v][u] = 0
+        self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1] = 0
+        self.adj_matrix[v + self.num_warehouses - 1][u + self.num_warehouses - 1] = 0
 
     ####################################
     # GENERATE_AND_WRITE_EDGES_TO_FILE()
