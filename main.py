@@ -1,7 +1,11 @@
 from Graph import Graph
 
-# Graph.generate_and_write_edges_to_file(7)
-graph = Graph(3)
-graph.read_edges_from_file()
+
+graph = Graph(
+    num_vertices=4,
+    num_warehouses=3,
+    generate_new_data=True,
+)
+
 graph.print_adj_matrix()
 graph.print_graph()
