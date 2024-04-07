@@ -114,14 +114,24 @@ class Graph:
     # GET_WEIGHT()
     ##############
     # Getting edge weight
-    # Input:  u::[INT]         - vertex 'u' of {u, v} edge
-    #         v::[INT]         - vertex 'v' of {u, v} edge
-    # Output: adj_matrix[u][v] - weight of {u, v} edge
+    # Input:  u::[INT]                  - vertex 'u' of {u, v} edge
+    #         v::[INT]                  - vertex 'v' of {u, v} edge
+    # Output: adj_matrix[u][v]::[FLOAT] - weight of {u, v} edge
     def get_weight(self, u, v):
         if self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1] == 0:
             raise ValueError("No edge found to get weight.")
 
         return self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1]
+
+    ############################
+    # GET_VERTICES_PERMUTATION()
+    ############################
+    # Generating random permutation of client vertices
+    # Output: permutation::LIST([INT]) - list of client vertices (vertices > 0)
+    def get_vertices_permutation(self):
+        permutation = list(range(1, self.num_vertices - self.num_warehouses + 1))
+        random.shuffle(permutation)
+        return permutation
 
     ###########################
     # CHECK_GRAPH_CORRECTNESS()
@@ -152,6 +162,7 @@ class Graph:
 
         for idx, row in enumerate(self.adj_matrix):
             print(f"{idx - self.num_warehouses + 1:5}  {' '.join(f'{val:5}' for val in row)}")
+        print("\n")
 
     ###############
     # PRINT_GRAPH()
