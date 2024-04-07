@@ -1,3 +1,4 @@
+from Vertex import Vertex
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -9,11 +10,16 @@ class Graph:
     # __INIT__()
     ############
     # Graph class constructor
-    # Input: num_vertices::[INT]       - number of vertices
-    #        num_warehouses::[INT]     - number of warehouses
-    #        generate_new_data::[BOOL] - flag, if generate new data
-    #        filename::[STRING]        - file name for writing/reading data (default='graph-edges.txt')
-    def __init__(self, num_vertices, num_warehouses, generate_new_data=False, filename="graph-edges.txt"):
+    # Input: num_vertices::INT           - number of vertices
+    #        num_warehouses::INT         - number of warehouses
+    #        generate_new_edges::BOOL    - flag, if generate new edges
+    #        filename_edges::STRING      - file name for writing/reading edges (default='graph-edges.txt')
+    #        generate_new_vertices::BOOL - flag, if generate new vertices
+    #        filename_vertices::STRING   - file name for writing/reading vertices (default='graph-vertices.txt')
+    def __init__(self, num_vertices, num_warehouses,
+                 generate_new_edges=False, filename_edges="graph-edges.txt",
+                 generate_new_vertices=False, filename_vertices="graph-vertices.txt",
+                 ):
         if num_vertices < 2:
             raise ValueError("Graph must have at least two vertices.")
 
@@ -25,37 +31,48 @@ class Graph:
 
         self.num_vertices = num_vertices
         self.num_warehouses = num_warehouses
-        self.filename = filename
+        self.filename_edges = filename_edges
+        self.filename_vertices = filename_vertices
+        self.list_vertex = [Vertex(0, 0) for _ in range(self.num_vertices)]
 
-        if generate_new_data:
+        if generate_new_edges:
             self.generate_and_write_edges_to_file(
                 min_weight=1.0,
                 max_weight=10.0
             )
 
+        if generate_new_vertices:
+            self.generate_and_write_vertices_to_file(
+                min_vert=0,
+                max_vert=10
+            )
+
         if self.check_if_can_read():
-            raise ValueError("Incorrect parameters.Generate new valid graph or provide valid parameters.")
+            raise ValueError("Incorrect parameters. Generate new valid graph or provide valid parameters.")
 
         self.graph = nx.complete_graph(self.num_vertices - self.num_warehouses + 1)
         self.adj_matrix = np.zeros((self.num_vertices, self.num_vertices))
 
         self.read_edges_from_file()
+        self.read_vertices_from_file()
 
     #####################
     # CHECK_IF_CAN_READ()
     #####################
-    # Checking if parameters match number of vertices and warehouses provided in file
+    # Checking if edge parameters match number of vertices and warehouses provided in file
+    # And if vertices parameters match number of vertices
     def check_if_can_read(self):
-        return (sum(1 for line in open(self.filename, 'r')) != self.num_vertices * (self.num_vertices - 1) / 2) \
-            or (int(open(self.filename, 'r').readline().split(',')[0]) != -self.num_warehouses + 1)
+        return (sum(1 for _ in open(self.filename_edges, 'r')) != self.num_vertices * (self.num_vertices - 1) / 2) \
+            or (int(open(self.filename_edges, 'r').readline().split(',')[0]) != -self.num_warehouses + 1) \
+            or (sum(1 for _ in open(self.filename_vertices, 'r')) != self.num_vertices)
 
     ############
     # ADD_EDGE()
     ############
     # Adding edges to graph and adjacency matrix
-    # Input: u::[INT]        - vertex u of {u, v} edge
-    #        v::[INT]        - vertex v of {u, v} edge
-    #        weight::[FLOAT] - weight of {u, v} edge
+    # Input: u::INT        - vertex u of {u, v} edge
+    #        v::INT        - vertex v of {u, v} edge
+    #        weight::FLOAT - weight of {u, v} edge
     def add_edge(self, u, v, weight):
         if u == v:
             raise ValueError("Self-loop edge.")
@@ -72,8 +89,8 @@ class Graph:
     ###############
     # Removing edges from graph and adjacency matrix
     # Edge does not exist if adj_matrix is 0 on [u][v] and [v][u]
-    # Input: u::[INT]        - vertex u of {u, v} edge
-    #        v::[INT]        - vertex v of {u, v} edge
+    # Input: u::INT        - vertex u of {u, v} edge
+    #        v::INT        - vertex v of {u, v} edge
     def remove_edge(self, u, v):
         if u == v or not (self.graph.has_edge(u, v)):
             raise ValueError("No edge is found for removal.")
@@ -87,36 +104,62 @@ class Graph:
     ####################################
     # Generating new graph edges and writing them to file
     # Each line contains edge in the form of [u, v, weight],
-    # Where u::[Int], v::[Int], weight::[Float].random(), and u < v
-    # Input: min_weight[Float]  - minimum edge weight (default: 1.0)
-    #        max_weight[Float]  - maximum edge weight (default: 10.0)
+    # Where u::Int, v::Int, weight::Float.random(), and u < v
+    # Input: min_weight::Float  - minimum edge weight (default: 1.0)
+    #        max_weight::Float  - maximum edge weight (default: 10.0)
     def generate_and_write_edges_to_file(self, min_weight=1.0, max_weight=10.0):
-        with open(self.filename, 'w') as file:
+        with open(self.filename_edges, 'w') as file:
             for u in range(self.num_vertices):
                 for v in range(u + 1, self.num_vertices):
                     file.write(f"{u - self.num_warehouses + 1}, "
                                f"{v - self.num_warehouses + 1}, "
                                f"{round(random.uniform(min_weight, max_weight), 2)}\n")
 
+    #######################################
+    # GENERATE_AND_WRITE_VERTICES_TO_FILE()
+    #######################################
+    # Generating new graph vertices and writing them to file
+    # Each line contains vertex in the form of [c, s]
+    # Where c::Int (max. capacity), s::Int (items stored)
+    # Input: min_vert::Int  - minimum vertex weight (default: 0)
+    #        max_vert::Int  - maximum vertex weight (default: 10)
+    def generate_and_write_vertices_to_file(self, min_vert=0, max_vert=10):
+        with open(self.filename_vertices, 'w') as file:
+            for _ in range(self.num_vertices):
+                file.write(f"{random.randint(min_vert, max_vert)}, {random.randint(min_vert, max_vert)}\n")
+
     ########################
     # READ_EDGES_FROM_FILE()
     ########################
     # Reading graph edges from file
-    # Each line contains edge in the form of [u, v, weight]
-    # Where u::[Int], v::[Int], weight::[Float]
+    # Each line contains edge and its weight in the form of [u, v, weight]
+    # Where u::Int, v::Int, weight::Float
     def read_edges_from_file(self):
-        with open(self.filename, 'r') as file:
+        with open(self.filename_edges, 'r') as file:
             for line in file:
                 u, v, weight = map(float, line.strip().split(','))
                 self.add_edge(int(u), int(v), weight)
+
+    ###########################
+    # READ_VERTICES_FROM_FILE()
+    ###########################
+    # Reading graph vertices from file
+    # Each line contains vertex in the form of [c, s]
+    # Where c::Int (max. capacity), s::Int (items stored)
+    def read_vertices_from_file(self):
+        with open(self.filename_vertices, 'r') as file:
+            for idx, line in enumerate(file):
+                c, s = map(int, line.strip().split(','))
+                self.list_vertex[idx].capacity = c
+                self.list_vertex[idx].stored = s
 
     ##############
     # GET_WEIGHT()
     ##############
     # Getting edge weight
-    # Input:  u::[INT]                  - vertex 'u' of {u, v} edge
-    #         v::[INT]                  - vertex 'v' of {u, v} edge
-    # Output: adj_matrix[u][v]::[FLOAT] - weight of {u, v} edge
+    # Input:  u::INT                  - vertex 'u' of {u, v} edge
+    #         v::INT                  - vertex 'v' of {u, v} edge
+    # Output: adj_matrix[u][v]::FLOAT - weight of {u, v} edge
     def get_weight(self, u, v):
         if self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1] == 0:
             raise ValueError("No edge found to get weight.")
@@ -127,11 +170,20 @@ class Graph:
     # GET_VERTICES_PERMUTATION()
     ############################
     # Generating random permutation of client vertices
-    # Output: permutation::LIST([INT]) - list of client vertices (vertices > 0)
+    # Output: permutation::[INT] - list of client vertices (vertices > 0)
     def get_vertices_permutation(self):
         permutation = list(range(1, self.num_vertices - self.num_warehouses + 1))
         random.shuffle(permutation)
         return permutation
+
+    ##############
+    # GET_VERTEX()
+    ##############
+    # Getting vertex parameters by given index
+    # Input: vertex_idx::INT - vertex index
+    # Output: vertex::class::Vertex - vertex with its max. capacity and stored items
+    def get_vertex(self, vertex_idx):
+        return self.list_vertex[vertex_idx - self.num_warehouses + 1]
 
     ###########################
     # CHECK_GRAPH_CORRECTNESS()
