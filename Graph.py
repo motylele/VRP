@@ -1,4 +1,5 @@
-from Vertex import Vertex
+from WarehouseVertex import WarehouseVertex
+from ClientVertex import ClientVertex
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -10,16 +11,29 @@ class Graph:
     # __INIT__()
     ############
     # Graph class constructor
-    # Input: num_vertices::INT           - number of vertices
-    #        num_warehouses::INT         - number of warehouses
-    #        generate_new_edges::BOOL    - flag, if generate new edges
-    #        filename_edges::STRING      - file name for writing/reading edges (default='graph-edges.txt')
-    #        generate_new_vertices::BOOL - flag, if generate new vertices
-    #        filename_vertices::STRING   - file name for writing/reading vertices (default='graph-vertices.txt')
-    def __init__(self, num_vertices, num_warehouses,
-                 generate_new_edges=False, filename_edges="graph-edges.txt",
-                 generate_new_vertices=False, filename_vertices="graph-vertices.txt",
-                 ):
+    # Input: num_vertices::INT                    - number of vertices
+    #        num_warehouses::INT                  - number of warehouses
+    #        vehicles_and_capacities::[[Int,Int]] - list of pairs [vehicles count, their capacity]
+    #                                               *Assuming all warehouse vertices have the same fleet of vehicles*
+    #                                               Ex. vehicles_and_capacities = [
+    #                                                   (10, 12),  # 10 vehicles with capacity 12
+    #                                                   (5, 8)     # 5 vehicles with capacity 8
+    #                                               ]
+    #        generate_new_edges::BOOL             - flag, if generate new edges
+    #        filename_edges::STRING               - file name for writing/reading edges and their weights
+    #                                               (default='graph-edges.txt')
+    #        generate_new_vertices::BOOL          - flag, if generate new vertices
+    #        filename_vertices::STRING            - file name for writing/reading vertices
+    #                                               (default='graph-vertices.txt')
+    def __init__(self,
+                 num_vertices,
+                 num_warehouses,
+                 vehicles_and_capacities,
+                 generate_new_edges=False,
+                 filename_edges="graph-edges.txt",
+                 generate_new_vertices=False,
+                 filename_vertices="graph-vertices.txt"):
+
         if num_vertices < 2:
             raise ValueError("Graph must have at least two vertices.")
 
@@ -29,11 +43,18 @@ class Graph:
         if num_warehouses > num_vertices - 1:
             raise ValueError("At least one client vertex is required.")
 
+        # todo: 'vehicles_and_capacities' validation
+
         self.num_vertices = num_vertices
         self.num_warehouses = num_warehouses
+
         self.filename_edges = filename_edges
         self.filename_vertices = filename_vertices
-        self.list_vertex = [Vertex(0, 0) for _ in range(self.num_vertices)]
+
+        self.list_client_vertices = [ClientVertex(i + 1, 0, 0)
+                                     for i in range(self.num_vertices - self.num_warehouses + 1)]
+        self.list_warehouse_vertices = [WarehouseVertex(i, vehicles_and_capacities)
+                                        for i in range(-self.num_warehouses + 1, 1)]
 
         if generate_new_edges:
             self.generate_and_write_edges_to_file(
@@ -59,26 +80,28 @@ class Graph:
     #####################
     # CHECK_IF_CAN_READ()
     #####################
-    # Checking if edge parameters match number of vertices and warehouses provided in file
-    # And if vertices parameters match number of vertices
+    # File readability conditions check:
+    # 1. Checking if edge parameters match number of vertices, edges = (vertices * vertices - 1) / 2
+    # 2. Checking if edges generated for proper number of warehouses
+    # 3. Checking if vertices parameters match number of vertices
     def check_if_can_read(self):
         return (sum(1 for _ in open(self.filename_edges, 'r')) != self.num_vertices * (self.num_vertices - 1) / 2) \
             or (int(open(self.filename_edges, 'r').readline().split(',')[0]) != -self.num_warehouses + 1) \
-            or (sum(1 for _ in open(self.filename_vertices, 'r')) != self.num_vertices)
+            or (sum(1 for _ in open(self.filename_vertices, 'r')) != self.num_vertices - self.num_warehouses + 1)
 
     ############
     # ADD_EDGE()
     ############
-    # Adding edges to graph and adjacency matrix
+    # Adding edge to graph and adjacency matrix
     # Input: u::INT        - vertex u of {u, v} edge
     #        v::INT        - vertex v of {u, v} edge
     #        weight::FLOAT - weight of {u, v} edge
     def add_edge(self, u, v, weight):
         if u == v:
-            raise ValueError("Self-loop edge.")
+            raise ValueError("Attempting to add self-loop edge.")
         else:
             if self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1] != 0:
-                raise ValueError("Attempting to add the same edge.")
+                raise ValueError("Attempting to add the existing edge.")
 
         self.graph.add_edge(u, v, weight=weight)
         self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1] = weight
@@ -87,10 +110,10 @@ class Graph:
     ###############
     # REMOVE_EDGE()
     ###############
-    # Removing edges from graph and adjacency matrix
-    # Edge does not exist if adj_matrix is 0 on [u][v] and [v][u]
-    # Input: u::INT        - vertex u of {u, v} edge
-    #        v::INT        - vertex v of {u, v} edge
+    # Removing edge from graph and adjacency matrix
+    # Edge does not exist if adj_matrix is 0 on [u][v] (and [v][u])
+    # Input: u::INT - vertex u of {u, v} edge
+    #        v::INT - vertex v of {u, v} edge
     def remove_edge(self, u, v):
         if u == v or not (self.graph.has_edge(u, v)):
             raise ValueError("No edge is found for removal.")
@@ -105,8 +128,8 @@ class Graph:
     # Generating new graph edges and writing them to file
     # Each line contains edge in the form of [u, v, weight],
     # Where u::Int, v::Int, weight::Float.random(), and u < v
-    # Input: min_weight::Float  - minimum edge weight (default: 1.0)
-    #        max_weight::Float  - maximum edge weight (default: 10.0)
+    # Input: min_weight::Float - minimum edge weight (default: 1.0)
+    #        max_weight::Float - maximum edge weight (default: 10.0)
     def generate_and_write_edges_to_file(self, min_weight=1.0, max_weight=10.0):
         with open(self.filename_edges, 'w') as file:
             for u in range(self.num_vertices):
@@ -121,11 +144,11 @@ class Graph:
     # Generating new graph vertices and writing them to file
     # Each line contains vertex in the form of [c, s]
     # Where c::Int (max. capacity), s::Int (items stored)
-    # Input: min_vert::Int  - minimum vertex weight (default: 0)
-    #        max_vert::Int  - maximum vertex weight (default: 10)
+    # Input: min_vert::Int - minimum vertex weight (default: 0)
+    #        max_vert::Int - maximum vertex weight (default: 10)
     def generate_and_write_vertices_to_file(self, min_vert=0, max_vert=10):
         with open(self.filename_vertices, 'w') as file:
-            for _ in range(self.num_vertices):
+            for _ in range(self.num_vertices - self.num_warehouses + 1):
                 file.write(f"{random.randint(min_vert, max_vert)}, {random.randint(min_vert, max_vert)}\n")
 
     ########################
@@ -144,14 +167,14 @@ class Graph:
     # READ_VERTICES_FROM_FILE()
     ###########################
     # Reading graph vertices from file
-    # Each line contains vertex in the form of [c, s]
-    # Where c::Int (max. capacity), s::Int (items stored)
+    # Each line contains vertex in the form of [capacity, stored]
+    # Where capacity::Int (max. capacity), stored::Int (items stored)
     def read_vertices_from_file(self):
         with open(self.filename_vertices, 'r') as file:
             for idx, line in enumerate(file):
-                c, s = map(int, line.strip().split(','))
-                self.list_vertex[idx].capacity = c
-                self.list_vertex[idx].stored = s
+                capacity, stored = map(int, line.strip().split(','))
+                self.list_client_vertices[idx].capacity = capacity
+                self.list_client_vertices[idx].stored = stored
 
     ##############
     # GET_WEIGHT()
@@ -180,10 +203,27 @@ class Graph:
     # GET_VERTEX()
     ##############
     # Getting vertex parameters by given index
-    # Input: vertex_idx::INT - vertex index
+    # Input: vertex_idx::INT        - vertex index
     # Output: vertex::class::Vertex - vertex with its max. capacity and stored items
     def get_vertex(self, vertex_idx):
-        return self.list_vertex[vertex_idx - self.num_warehouses + 1]
+        return self.list_client_vertices[vertex_idx]
+
+    #########################
+    # GET_CLOSEST_WAREHOUSE()
+    #########################
+    # Getting closest warehouse
+    # Input: vertex::Int                                - vertex index
+    # Output: closest_warehouse::class::WarehouseVertex - closest warehouse
+    def get_closest_warehouse(self, vertex):
+        closest_warehouse = None
+        warehouse_weight = float('inf')
+
+        for warehouse in self.list_warehouse_vertices:
+            weight = self.get_weight(warehouse.index, vertex)
+            if weight < warehouse_weight:
+                closest_warehouse = warehouse
+                warehouse_weight = weight
+        return closest_warehouse
 
     ###########################
     # CHECK_GRAPH_CORRECTNESS()
@@ -221,7 +261,7 @@ class Graph:
     ###############
     # Displaying graph as plot
     def print_graph(self):
-        pos = nx.spring_layout(self.graph)
+        pos = nx.spring_layout(self.graph, seed=42)
         nx.draw(self.graph, pos, with_labels=True)
         labels = nx.get_edge_attributes(self.graph, 'weight')
         nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=labels)
