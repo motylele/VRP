@@ -1,18 +1,25 @@
-from Graph import Graph
 from enum import Enum
 
+# todo: function descriptions
 
+
+# Enum for neighborhood select type
 class Neighborhood(Enum):
     INSERT = 1
     SWAP = 2
 
-def display_solution(descent_instance):
-    print(f"Solution =  {descent_instance[0]}")
-    print(f"Total cost = {descent_instance[1]}")
-    print("Index: [Route] | Vehicle capacity | Initial vehicle load")
-    for idx, route in enumerate(descent_instance[2]):
-        print(f"{idx}: {route} | {descent_instance[3][idx]} | {descent_instance[4][idx]} ")
 
+# Displaying descent algorithm output
+def display_solution(descent_instance):
+    print(f"BEST SOLUTION =  {descent_instance[0]}")
+    print(f"TOTAL COST = {descent_instance[1]}")
+    print("ROUTES (Index: Vehicle capacity | Initial vehicle load | [Route]):")
+    for idx, route in enumerate(descent_instance[2]):
+        print(f"{idx:3}: {descent_instance[3][idx]:5} | {descent_instance[4][idx]:5} | {route}")
+        # print(f"{idx}: {route} | {descent_instance[3][idx]} | {descent_instance[4][idx]} ")
+
+
+# Generating insert neighborhood
 def generate_insert_neighborhood(solution):  # size: (n - 1)^2
     neighborhood = []
     n = len(solution)
@@ -25,6 +32,7 @@ def generate_insert_neighborhood(solution):  # size: (n - 1)^2
     return list(set(tuple(neighbor) for neighbor in neighborhood))
 
 
+# Generating swap neighborhood
 def generate_swap_neighborhood(solution):  # size: n(n - 1)/2
     neighborhood = []
     n = len(solution)
@@ -37,7 +45,10 @@ def generate_swap_neighborhood(solution):  # size: n(n - 1)/2
     return list(set(tuple(neighbor) for neighbor in neighborhood))
 
 
+# Descent algorithm
 def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
+
+    # Calculating cost of given routes
     def calculate_cost(routes):
         total_cost = 0
         for route in routes:
@@ -46,6 +57,7 @@ def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
                 total_cost += graph.get_weight(u, v)
         return round(total_cost, 2)
 
+    # Checking if vehicle with specified capacity can serve given solution
     def check_if_can_serve(partial_solution, chosen_vehicle):
         demands = [graph.get_vertex(vertex).get_vertex_demand() for vertex in partial_solution]
         current_loads = [0] * len(demands)
@@ -84,9 +96,11 @@ def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
                                  # initial_load = [0, vehicle_capacity]
                                  # initial_load + 1 = [1, vehicle_capacity + 1]
 
+    # Creating route, adding warehouses to both ends
     def create_route(route, warehouse):
         return [warehouse.index] + list(route) + [warehouse.index]
 
+    # Fitness function calculating solution fitness value
     def fitness_function(solution):
         route = None
         route_load = None
@@ -111,7 +125,7 @@ def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
                 route = solution[solution_begin:solution_idx+1]
                 route_load = init_load - 1
                 solution_idx += 1
-            else:
+            else: # init_load == 0
                 solution_begin = solution_idx
 
                 if route is not None:
@@ -171,32 +185,3 @@ def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
 
     return solution_params
 
-
-vehicles_and_capacities = [
-    (8, 6),  # 10 vehicles with capacity 12
-    (5, 8)     # 5 vehicles with capacity 8
-]
-
-edges_range = (1.0, 10.0)
-vertices_range = (0, 10)
-
-graph = Graph(
-    num_vertices=7,
-    num_warehouses=3,
-    vehicles_and_capacities=vehicles_and_capacities,
-    generate_new_edges=False,
-    edges_range=edges_range,
-    generate_new_vertices=False,
-    vertices_range=vertices_range
-)
-
-descent_instance = descent_algorithm(
-    graph,
-    neighborhood_type=Neighborhood.INSERT
-)
-
-display_solution(descent_instance)
-
-graph.print_adj_matrix()
-graph.print_client_vertices_params()
-graph.print_graph_and_routes(descent_instance)

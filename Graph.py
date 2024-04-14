@@ -261,11 +261,25 @@ class Graph:
         print("\n")
 
     def print_client_vertices_params(self):
+        print("VERTEX:   ", end="")
         for vertex in self.list_client_vertices:
-            print(f"---VERTEX [{vertex.index: 3}]---")
-            print(f"Demand = {vertex.get_vertex_demand()}")
-            print(f"Max capacity = {vertex.capacity}")
-            print(f"Stored items = {vertex.stored}\n")
+            print(f"{vertex.index: 3}", end="")
+        print()
+
+        print("DEMAND:   ", end="")
+        for vertex in self.list_client_vertices:
+            print(f"{vertex.get_vertex_demand(): 3}", end="")
+        print()
+
+        print("CAPACITY: ", end="")
+        for vertex in self.list_client_vertices:
+            print(f"{vertex.capacity: 3}", end="")
+        print()
+
+        print("STORED:   ", end="")
+        for vertex in self.list_client_vertices:
+            print(f"{vertex.stored: 3}", end="")
+        print()
 
     def print_warehouse_vertices_params(self):
         for vertex in self.list_warehouse_vertices:
