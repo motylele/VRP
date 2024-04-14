@@ -57,8 +57,8 @@ class Graph:
         self.filename_edges = filename_edges
         self.filename_vertices = filename_vertices
 
-        self.list_client_vertices = [ClientVertex(i + 1, 0, 0)
-                                     for i in range(self.num_vertices - self.num_warehouses + 1)]
+        self.list_client_vertices = [ClientVertex(i, 0, 0)
+                                     for i in range(1, self.num_vertices - self.num_warehouses + 1)]
         self.list_warehouse_vertices = [WarehouseVertex(i, vehicles_and_capacities)
                                         for i in range(-self.num_warehouses + 1, 1)]
 
@@ -93,7 +93,7 @@ class Graph:
     def check_if_can_read(self):
         return (sum(1 for _ in open(self.filename_edges, 'r')) != self.num_vertices * (self.num_vertices - 1) / 2) \
             or (int(open(self.filename_edges, 'r').readline().split(',')[0]) != -self.num_warehouses + 1) \
-            or (sum(1 for _ in open(self.filename_vertices, 'r')) != self.num_vertices - self.num_warehouses + 1)
+            or (sum(1 for _ in open(self.filename_vertices, 'r')) != self.num_vertices - self.num_warehouses)
 
     ############
     # ADD_EDGE()
@@ -154,7 +154,7 @@ class Graph:
     #        max_vert::Int - maximum vertex weight (default: 10)
     def generate_and_write_vertices_to_file(self, min_vert=0, max_vert=10):
         with open(self.filename_vertices, 'w') as file:
-            for _ in range(self.num_vertices - self.num_warehouses + 1):
+            for _ in range(self.num_vertices - self.num_warehouses):
                 file.write(f"{random.randint(min_vert, max_vert)}, {random.randint(min_vert, max_vert)}\n")
 
     ########################
@@ -212,7 +212,7 @@ class Graph:
     # Input: vertex_idx::INT        - vertex index
     # Output: vertex::class::Vertex - vertex with its max. capacity and stored items
     def get_vertex(self, vertex_idx):
-        return self.list_client_vertices[vertex_idx]
+        return self.list_client_vertices[vertex_idx - 1]
 
     #########################
     # GET_CLOSEST_WAREHOUSE()
@@ -249,7 +249,7 @@ class Graph:
     ####################
     # Displaying adjacency matrix
     def print_adj_matrix(self):
-        print("Adjacency matrix:")
+        print("\nAdjacency matrix:")
 
         print("     ", end="")
         for vert in range(-self.num_warehouses + 1, self.num_vertices - self.num_warehouses + 1):
@@ -259,6 +259,19 @@ class Graph:
         for idx, row in enumerate(self.adj_matrix):
             print(f"{idx - self.num_warehouses + 1:5}  {' '.join(f'{val:5}' for val in row)}")
         print("\n")
+
+    def print_client_vertices_params(self):
+        for vertex in self.list_client_vertices:
+            print(f"---VERTEX [{vertex.index: 3}]---")
+            print(f"Demand = {vertex.get_vertex_demand()}")
+            print(f"Max capacity = {vertex.capacity}")
+            print(f"Stored items = {vertex.stored}\n")
+
+    def print_warehouse_vertices_params(self):
+        for vertex in self.list_warehouse_vertices:
+            print(f"---VERTEX [{vertex.index: 3}]---")
+            print(*vertex.list_vehicles, sep="\n")
+            print()
 
     ###############
     # PRINT_GRAPH()
@@ -275,70 +288,26 @@ class Graph:
         plt.show()
 
     def print_graph_and_routes(self, descent_instance):
-
-        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+        routes = descent_instance[2]
         warehouses = [warehouse.index for warehouse in self.list_warehouse_vertices]
 
-        pos1 = nx.spring_layout(self.graph, seed=42)
-        nx.draw(self.graph, pos1, with_labels=True, ax=axes[0], node_color='b')
-        labels1 = nx.get_edge_attributes(self.graph, 'weight')
-        nx.draw_networkx_edge_labels(self.graph, pos1, edge_labels=labels1, ax=axes[0])
-        nx.draw_networkx_nodes(self.graph, pos1, nodelist=warehouses, node_color='r', ax=axes[0])
-        axes[0].set_title('COMPLETE GRAPH')
+        pos = nx.spring_layout(self.graph, seed=42)
+        nx.draw(self.graph, pos, with_labels=True, node_color='b')
+        colors = ['g', 'b', 'c', 'm', 'y', 'k']  # Add more colors if needed
 
-        pos2 = nx.spring_layout(self.graph, seed=42)
-        nx.draw(self.graph, pos2, with_labels=True, ax=axes[1], node_color='b')
-        labels2 = nx.get_edge_attributes(self.graph, 'weight')
-        nx.draw_networkx_edge_labels(self.graph, pos2, edge_labels=labels2, ax=axes[1])
-        nx.draw_networkx_nodes(self.graph, pos2, nodelist=warehouses, node_color='r', ax=axes[1])
-        axes[1].set_title('SOLUTION ROUTES')
+        for idx, route in enumerate(routes, start=1):
+            edges = [(route[i], route[i + 1]) for i in range(len(route) - 1)]
+            color = colors[(idx - 1) % len(colors)]  # Use modulo to cycle through the list of colors
+            nx.draw_networkx_edges(self.graph, pos, edgelist=edges, edge_color=color, width=3.0, label=f'Route {idx}')
 
-        plt.tight_layout()
+        labels = nx.get_edge_attributes(self.graph, 'weight')
+        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=labels)
+        nx.draw_networkx_nodes(self.graph, pos, nodelist=warehouses, node_color='r', node_size=300)
+
+        plt.legend(fontsize=15)
         plt.show()
 
-    # def calculate_cost(self, routes):
-    #     total_cost = 0
-    #     for route in routes:
-    #         for vertex in range(len(route) - 1):
-    #             u, v = route[vertex], route[vertex + 1]
-    #             total_cost += self.get_weight(u, v)
-    #     return round(total_cost, 2)
-    #
-    # # descent_instance = [permutation], fitness_value([permutation]), [vehicles]
-    # def translate_solution_into_routes(self, descent_instance):
-    #     routes = []
-    #     route = []
-    #
-    #     permutation = descent_instance[0]
-    #     fitness_value = descent_instance[1]
-    #     vehicles = descent_instance[2]
-    #
-    #     permutation_idx = 0
-    #     closest_warehouse = self.get_closest_warehouse(permutation[permutation_idx])
-    #
-    #     while permutation_idx < len(permutation):
-    #         route = []
-    #         chosen_vehicle = vehicles.pop(0)
-    #
-    #         while permutation_idx < len(permutation):
-    #             vertex_demand = self.get_vertex(permutation[permutation_idx]).get_vertex_demand()
-    #
-    #             if chosen_vehicle.check_if_can_serve(vertex_demand):
-    #                 if not route:
-    #                     route.append(closest_warehouse.index)
-    #                 route.append(permutation[permutation_idx])
-    #                 permutation_idx += 1
-    #             else:
-    #                 if route:
-    #                     route.append(closest_warehouse.index)
-    #                     routes.append(route)
-    #                     closest_warehouse = self.get_closest_warehouse(permutation[permutation_idx])
-    #                     break
-    #                 if vehicles:
-    #                     chosen_vehicle = vehicles.pop(0)
-    #     if route:
-    #         route.append(closest_warehouse.index)
-    #         routes.append(route)
-    #
-    #     return self.calculate_cost(routes) == fitness_value
-
+        ''' max_cap = [8, 8]
+                3  1  2  4 
+       d        1  2 -1  8
+        '''

@@ -7,3 +7,5 @@ class Vehicle:
     def __init__(self, capacity):
         self.capacity = capacity
 
+    def __str__(self):
+        return f"    VEHICLE CAPACITY = {self.capacity}"

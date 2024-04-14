@@ -6,6 +6,12 @@ class Neighborhood(Enum):
     INSERT = 1
     SWAP = 2
 
+def display_solution(descent_instance):
+    print(f"Solution =  {descent_instance[0]}")
+    print(f"Total cost = {descent_instance[1]}")
+    print("Index: [Route] | Vehicle capacity | Initial vehicle load")
+    for idx, route in enumerate(descent_instance[2]):
+        print(f"{idx}: {route} | {descent_instance[3][idx]} | {descent_instance[4][idx]} ")
 
 def generate_insert_neighborhood(solution):  # size: (n - 1)^2
     neighborhood = []
@@ -71,9 +77,9 @@ def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
         # Route simulating
         vehicle_load = initial_load
         for demand in demands:
-            vehicle_load -= demand
             if vehicle_load > chosen_vehicle.capacity:
                 return 0  # False
+            vehicle_load -= demand
         return initial_load + 1  # True
                                  # initial_load = [0, vehicle_capacity]
                                  # initial_load + 1 = [1, vehicle_capacity + 1]
@@ -167,7 +173,7 @@ def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
 
 
 vehicles_and_capacities = [
-    (10, 12),  # 10 vehicles with capacity 12
+    (8, 6),  # 10 vehicles with capacity 12
     (5, 8)     # 5 vehicles with capacity 8
 ]
 
@@ -189,8 +195,8 @@ descent_instance = descent_algorithm(
     neighborhood_type=Neighborhood.INSERT
 )
 
-# [permutation], fitness_value([permutation]), [vehicles]
-print(descent_instance)
+display_solution(descent_instance)
 
-# graph.print_graph_and_routes(descent_instance)
-# print(graph.translate_solution_into_routes(descent_instance))
+graph.print_adj_matrix()
+graph.print_client_vertices_params()
+graph.print_graph_and_routes(descent_instance)
