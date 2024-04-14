@@ -1,5 +1,6 @@
 from WarehouseVertex import WarehouseVertex
 from ClientVertex import ClientVertex
+from Vehicle import Vehicle
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -30,8 +31,10 @@ class Graph:
                  num_warehouses,
                  vehicles_and_capacities,
                  generate_new_edges=False,
+                 edges_range=(1.0, 10.0),
                  filename_edges="graph-edges.txt",
                  generate_new_vertices=False,
+                 vertices_range=(0, 10),
                  filename_vertices="graph-vertices.txt"):
 
         if num_vertices < 2:
@@ -48,6 +51,9 @@ class Graph:
         self.num_vertices = num_vertices
         self.num_warehouses = num_warehouses
 
+        self.edges_range= edges_range
+        self.vertices_range = vertices_range
+
         self.filename_edges = filename_edges
         self.filename_vertices = filename_vertices
 
@@ -58,14 +64,14 @@ class Graph:
 
         if generate_new_edges:
             self.generate_and_write_edges_to_file(
-                min_weight=1.0,
-                max_weight=10.0
+                min_weight=self.edges_range[0],
+                max_weight=self.edges_range[1]
             )
 
         if generate_new_vertices:
             self.generate_and_write_vertices_to_file(
-                min_vert=0,
-                max_vert=10
+                min_vert=self.vertices_range[0],
+                max_vert=self.vertices_range[1]
             )
 
         if self.check_if_can_read():
@@ -233,11 +239,9 @@ class Graph:
     def check_graph_correctness(self):
         for u, v in self.graph.edges():
             if self.adj_matrix[u][v] == 0:
-                print(u, v)
                 raise ValueError("Graph not complete (edge with weight 0).")
 
             if self.adj_matrix[u][v] < 0:
-                print(u, v)
                 raise ValueError("Edge with non-positive weight.")
 
     ####################
@@ -261,8 +265,80 @@ class Graph:
     ###############
     # Displaying graph as plot
     def print_graph(self):
+        warehouses = [warehouse.index for warehouse in self.list_warehouse_vertices]
+
         pos = nx.spring_layout(self.graph, seed=42)
         nx.draw(self.graph, pos, with_labels=True)
         labels = nx.get_edge_attributes(self.graph, 'weight')
         nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=labels)
+        nx.draw_networkx_nodes(self.graph, pos, nodelist=warehouses, node_color='r')
         plt.show()
+
+    def print_graph_and_routes(self, descent_instance):
+
+        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+        warehouses = [warehouse.index for warehouse in self.list_warehouse_vertices]
+
+        pos1 = nx.spring_layout(self.graph, seed=42)
+        nx.draw(self.graph, pos1, with_labels=True, ax=axes[0], node_color='b')
+        labels1 = nx.get_edge_attributes(self.graph, 'weight')
+        nx.draw_networkx_edge_labels(self.graph, pos1, edge_labels=labels1, ax=axes[0])
+        nx.draw_networkx_nodes(self.graph, pos1, nodelist=warehouses, node_color='r', ax=axes[0])
+        axes[0].set_title('COMPLETE GRAPH')
+
+        pos2 = nx.spring_layout(self.graph, seed=42)
+        nx.draw(self.graph, pos2, with_labels=True, ax=axes[1], node_color='b')
+        labels2 = nx.get_edge_attributes(self.graph, 'weight')
+        nx.draw_networkx_edge_labels(self.graph, pos2, edge_labels=labels2, ax=axes[1])
+        nx.draw_networkx_nodes(self.graph, pos2, nodelist=warehouses, node_color='r', ax=axes[1])
+        axes[1].set_title('SOLUTION ROUTES')
+
+        plt.tight_layout()
+        plt.show()
+
+    # def calculate_cost(self, routes):
+    #     total_cost = 0
+    #     for route in routes:
+    #         for vertex in range(len(route) - 1):
+    #             u, v = route[vertex], route[vertex + 1]
+    #             total_cost += self.get_weight(u, v)
+    #     return round(total_cost, 2)
+    #
+    # # descent_instance = [permutation], fitness_value([permutation]), [vehicles]
+    # def translate_solution_into_routes(self, descent_instance):
+    #     routes = []
+    #     route = []
+    #
+    #     permutation = descent_instance[0]
+    #     fitness_value = descent_instance[1]
+    #     vehicles = descent_instance[2]
+    #
+    #     permutation_idx = 0
+    #     closest_warehouse = self.get_closest_warehouse(permutation[permutation_idx])
+    #
+    #     while permutation_idx < len(permutation):
+    #         route = []
+    #         chosen_vehicle = vehicles.pop(0)
+    #
+    #         while permutation_idx < len(permutation):
+    #             vertex_demand = self.get_vertex(permutation[permutation_idx]).get_vertex_demand()
+    #
+    #             if chosen_vehicle.check_if_can_serve(vertex_demand):
+    #                 if not route:
+    #                     route.append(closest_warehouse.index)
+    #                 route.append(permutation[permutation_idx])
+    #                 permutation_idx += 1
+    #             else:
+    #                 if route:
+    #                     route.append(closest_warehouse.index)
+    #                     routes.append(route)
+    #                     closest_warehouse = self.get_closest_warehouse(permutation[permutation_idx])
+    #                     break
+    #                 if vehicles:
+    #                     chosen_vehicle = vehicles.pop(0)
+    #     if route:
+    #         route.append(closest_warehouse.index)
+    #         routes.append(route)
+    #
+    #     return self.calculate_cost(routes) == fitness_value
+
