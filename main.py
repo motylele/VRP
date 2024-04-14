@@ -2,6 +2,7 @@ from enum import Enum
 from Descent import descent_algorithm, Neighborhood, display_solution
 from Graph import Graph
 from MultistartDescent import multistart_descent
+from SimulatedAnnealing import simulated_annealing
 
 
 # Enum for choosing algorithm
@@ -37,16 +38,16 @@ graph = Graph(
     vertices_range=vertices_range
 )
 
-# Choosing algorithm type
-algorithm_type = Algorithm.MULTISTART_DESCENT
+# Algorithm global params
+algorithm_type = Algorithm.SIMULATED_ANNEALING
+time_limit = 5
 
 
 if algorithm_type == Algorithm.MULTISTART_DESCENT:
     num_iterations = 5
-    time_limit = 30
 
     # Run algorithm
-    multistart_instance = multistart_descent(
+    md_instance = multistart_descent(
         graph,
         num_iterations,
         time_limit,
@@ -54,7 +55,7 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT:
     )
 
     # Displaying solution
-    display_solution(multistart_instance)
+    display_solution(md_instance)
 
     # Adjacency matrix
     graph.print_adj_matrix()
@@ -63,13 +64,26 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT:
     graph.print_client_vertices_params()
 
     # Displaying graph with overlaid solution routes
-    graph.print_graph_and_routes(multistart_instance)
+    graph.print_graph_and_routes(md_instance)
 
-elif algorithm_type == Algorithm.MULTISTART_DESCENT:
+elif algorithm_type == Algorithm.SIMULATED_ANNEALING:
+    num_iterations = 5
+    initial_temperature = 150
+    final_temperature = 20
+
+    # Run algorithm
+    sa_instance = simulated_annealing(
+        graph,
+        num_iterations,
+        time_limit,
+        initial_temperature,
+        final_temperature,
+        Neighborhood.INSERT  # or SWAP
+    )
+
+elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
     print("WIP")
-elif algorithm_type == Algorithm.MULTISTART_DESCENT:
-    print("WIP")
-elif algorithm_type == Algorithm.MULTISTART_DESCENT:
+elif algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM:
     print("WIP")
 else:
     print("No such option.")
