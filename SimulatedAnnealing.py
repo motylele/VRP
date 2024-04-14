@@ -1,13 +1,166 @@
 import time
+import random
 
 
+# Displaying descent algorithm output
+def display_solution(descent_instance):
+    print(f"BEST SOLUTION =  {descent_instance[0]}")
+    print(f"TOTAL COST = {descent_instance[1]}")
+    print("ROUTES (Index: Vehicle capacity | Initial vehicle load | [Route]):")
+    for idx, route in enumerate(descent_instance[2]):
+        print(f"{idx:3}: {descent_instance[3][idx]:5} | {descent_instance[4][idx]:5} | {route}")
+        # print(f"{idx}: {route} | {descent_instance[3][idx]} | {descent_instance[4][idx]} ")
+
+
+# Generating insert neighborhood
+def generate_insert_neighborhood(solution):  # size: (n - 1)^2
+    neighborhood = []
+    n = len(solution)
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                neighbor = list(solution)
+                neighbor.insert(j, neighbor.pop(i))
+                neighborhood.append(neighbor)
+    return list(set(tuple(neighbor) for neighbor in neighborhood))
+
+
+# Generating swap neighborhood
+def generate_swap_neighborhood(solution):  # size: n(n - 1)/2
+    neighborhood = []
+    n = len(solution)
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                neighbor = list(solution)
+                neighbor[i], neighbor[j] = neighbor[j], neighbor[i]
+                neighborhood.append(neighbor)
+    return list(set(tuple(neighbor) for neighbor in neighborhood))
+
+
+# Accepting result with given probability
+def accept_with_probability(probability):
+    return random.random() < probability
+
+# Simulated annealing
 def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, final_temperature, neighborhood_type):
-    beta = (initial_temperature - final_temperature) / ((num_iterations -1) * initial_temperature * final_temperature)
+
+    # Calculating cost of given routes
+    def calculate_cost(routes):
+        total_cost = 0
+        for route in routes:
+            for vertex in range(len(route) - 1):
+                u, v = route[vertex], route[vertex + 1]
+                total_cost += graph.get_weight(u, v)
+        return round(total_cost, 2)
+
+    # Checking if vehicle with specified capacity can serve given solution
+    def check_if_can_serve(partial_solution, chosen_vehicle):
+        demands = [graph.get_vertex(vertex).get_vertex_demand() for vertex in partial_solution]
+        current_loads = [0] * len(demands)
+        initial_load = 0
+
+        for idx, demand in enumerate(demands):
+            if demand > 0:
+                if idx == 0:
+                    current_loads[idx] = 0
+                    initial_load = demand
+                else:  # idx > 0
+                    current_load = current_loads[idx - 1] - demand
+                    if current_load > 0:
+                        current_loads[idx] = current_load
+                    else:  # current_load < 0
+                        current_loads[idx] = 0
+
+                    vertex_load = demand - current_loads[idx - 1]
+                    if vertex_load > 0:
+                        initial_load += vertex_load
+            else:  # demand < 0
+                demand = abs(demand)
+                if idx == 0:
+                    current_loads[idx] = demand
+                    initial_load = 0
+                else:  # idx > 0
+                    current_loads[idx] = current_loads[idx - 1] + demand
+
+        # Route simulating
+        vehicle_load = initial_load
+        for demand in demands:
+            if vehicle_load > chosen_vehicle.capacity:
+                return 0  # False
+            vehicle_load -= demand
+        return initial_load + 1  # True
+        # initial_load = [0, vehicle_capacity]
+        # initial_load + 1 = [1, vehicle_capacity + 1]
+
+    # Creating route, adding warehouses to both ends
+    def create_route(route, warehouse):
+        return [warehouse.index] + list(route) + [warehouse.index]
+
+    # Fitness function calculating solution fitness value
+    def fitness_function(solution):
+        route = None
+        route_load = None
+
+        routes = []
+        vehicles = []
+        init_loads = []
+
+        solution_idx = 0
+        solution_begin = 0
+
+        closest_warehouse = graph.get_closest_warehouse(solution[solution_idx])
+        chosen_vehicle = closest_warehouse.select_vehicle()
+
+        while solution_idx < len(solution):
+            init_load = check_if_can_serve(solution[solution_begin:solution_idx + 1], chosen_vehicle)
+
+            if init_load:
+                if route is None:
+                    vehicles.append(chosen_vehicle.capacity)
+
+                route = solution[solution_begin:solution_idx + 1]
+                route_load = init_load - 1
+                solution_idx += 1
+            else:  # init_load == 0
+                solution_begin = solution_idx
+
+                if route is not None:
+                    routes.append(
+                        create_route(
+                            route,
+                            closest_warehouse
+                        )
+                    )
+
+                    closest_warehouse = graph.get_closest_warehouse(solution[solution_begin])
+                    init_loads.append(route_load)
+                    route = None
+                chosen_vehicle = closest_warehouse.select_vehicle()
+
+        if route:
+            routes.append(
+                create_route(
+                    route,
+                    closest_warehouse
+                )
+            )
+            init_loads.append(route_load)
+
+        return calculate_cost(routes), routes, vehicles, init_loads
+
+    # Simulated annealing algorithm
+    beta = (initial_temperature - final_temperature) / ((num_iterations - 1) * initial_temperature * final_temperature)
+    solution = graph.get_vertices_permutation()
 
     start_time = time.time()
     for i in range(num_iterations):
         if time.time() - start_time >= time_limit:
             break
 
-        # acceptance_probability
-    print("SIMULATED ANNEALING")
+        neighborhood = []
+        if neighborhood_type == neighborhood_type:
+            neighborhood = generate_insert_neighborhood(solution)
+
+        if neighborhood_type == neighborhood_type:
+            neighborhood = generate_swap_neighborhood(solution)
