@@ -1,6 +1,7 @@
 from enum import Enum
 from Descent import descent_algorithm, Neighborhood, display_solution
 from Graph import Graph
+from MultistartDescent import multistart_descent
 
 
 # Enum for choosing algorithm
@@ -41,14 +42,19 @@ algorithm_type = Algorithm.MULTISTART_DESCENT
 
 
 if algorithm_type == Algorithm.MULTISTART_DESCENT:
+    num_iterations = 5
+    time_limit = 30
+
     # Run algorithm
-    descent_instance = descent_algorithm(
+    multistart_instance = multistart_descent(
         graph,
-        neighborhood_type=Neighborhood.INSERT
+        num_iterations,
+        time_limit,
+        Neighborhood.INSERT  # or SWAP
     )
 
     # Displaying solution
-    display_solution(descent_instance)
+    display_solution(multistart_instance)
 
     # Adjacency matrix
     graph.print_adj_matrix()
@@ -57,7 +63,7 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT:
     graph.print_client_vertices_params()
 
     # Displaying graph with overlaid solution routes
-    graph.print_graph_and_routes(descent_instance)
+    graph.print_graph_and_routes(multistart_instance)
 
 elif algorithm_type == Algorithm.MULTISTART_DESCENT:
     print("WIP")
