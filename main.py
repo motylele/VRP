@@ -1,5 +1,6 @@
 from enum import Enum
 from Descent import Neighborhood, display_solution
+from Genetic import genetic_algorithm
 from Graph import Graph
 from MultistartDescent import multistart_descent
 from SimulatedAnnealing import simulated_annealing
@@ -39,7 +40,7 @@ graph = Graph(
 )
 
 # Algorithm global params
-algorithm_type = Algorithm.SIMULATED_ANNEALING
+algorithm_type = Algorithm.GENETIC_ALGORITHM
 time_limit = 5
 
 
@@ -84,7 +85,7 @@ elif algorithm_type == Algorithm.SIMULATED_ANNEALING:
     display_solution(sa_instance)
 
 elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
-    print("WIP")
+    genetic_algorithm(graph)
 elif algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM:
     print("WIP")
 else:
