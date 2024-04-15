@@ -1,5 +1,6 @@
 import time
 import random
+import math
 
 
 # Displaying descent algorithm output
@@ -40,6 +41,7 @@ def generate_swap_neighborhood(solution):  # size: n(n - 1)/2
 
 # Accepting result with given probability
 def accept_with_probability(probability):
+    # print(probability) # 10 looks ok
     return random.random() < probability
 
 # Simulated annealing
@@ -90,8 +92,8 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
                 return 0  # False
             vehicle_load -= demand
         return initial_load + 1  # True
-        # initial_load = [0, vehicle_capacity]
-        # initial_load + 1 = [1, vehicle_capacity + 1]
+                                 # initial_load = [0, vehicle_capacity]
+                                 # initial_load + 1 = [1, vehicle_capacity + 1]
 
     # Creating route, adding warehouses to both ends
     def create_route(route, warehouse):
@@ -152,6 +154,8 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
     # Simulated annealing algorithm
     beta = (initial_temperature - final_temperature) / ((num_iterations - 1) * initial_temperature * final_temperature)
     solution = graph.get_vertices_permutation()
+    current_temperature = initial_temperature
+    solution_params = ()
 
     start_time = time.time()
     for i in range(num_iterations):
@@ -164,3 +168,30 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
 
         if neighborhood_type == neighborhood_type:
             neighborhood = generate_swap_neighborhood(solution)
+
+        solution_val, solution_routes, solution_vehicles, solution_init_loads = fitness_function(solution)
+        solution_params = (
+            solution,
+            solution_val,
+            solution_routes,
+            solution_vehicles,
+            solution_init_loads
+        )
+
+        for neighbor in neighborhood:
+            neighbor_val, neighbor_routes, neighbor_vehicles, neighbor_init_loads = fitness_function(neighbor)
+            probability = math.exp((solution_params[1] - neighbor_val) / current_temperature)  # todo check?
+            if solution_params[1] > neighbor_val or accept_with_probability(probability):
+                solution_params = (
+                    neighbor,
+                    neighbor_val,
+                    neighbor_routes,
+                    neighbor_vehicles,
+                    neighbor_init_loads
+                )
+
+        if i < num_iterations - 1:
+            # print(current_temperature)
+            current_temperature = current_temperature / (1 + beta * current_temperature)
+
+    return solution_params

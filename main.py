@@ -1,5 +1,5 @@
 from enum import Enum
-from Descent import descent_algorithm, Neighborhood, display_solution
+from Descent import Neighborhood, display_solution
 from Graph import Graph
 from MultistartDescent import multistart_descent
 from SimulatedAnnealing import simulated_annealing
@@ -67,9 +67,9 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT:
     graph.print_graph_and_routes(md_instance)
 
 elif algorithm_type == Algorithm.SIMULATED_ANNEALING:
-    num_iterations = 5
-    initial_temperature = 150
-    final_temperature = 20
+    num_iterations = 30
+    initial_temperature = 100.0
+    final_temperature = 5.0
 
     # Run algorithm
     sa_instance = simulated_annealing(
@@ -80,6 +80,8 @@ elif algorithm_type == Algorithm.SIMULATED_ANNEALING:
         final_temperature,
         Neighborhood.INSERT  # or SWAP
     )
+
+    display_solution(sa_instance)
 
 elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
     print("WIP")
