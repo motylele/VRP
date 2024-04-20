@@ -85,6 +85,11 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
                 else:  # idx > 0
                     current_loads[idx] = current_loads[idx - 1] + demand
 
+        # Vehicle load check
+        for current_load in current_loads:
+            if current_load > chosen_vehicle.capacity:
+                return 0
+
         # Route simulating
         vehicle_load = initial_load
         for demand in demands:

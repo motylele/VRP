@@ -1,8 +1,11 @@
+from Enums import Crossover
+import warnings
 import pygad
 import numpy
 import time
-from Enums import Crossover
 
+# Ignore constant warning
+warnings.filterwarnings("ignore", message="The 'delay_after_gen' parameter is deprecated*")
 
 def genetic_algorithm(
         graph,
@@ -17,6 +20,15 @@ def genetic_algorithm(
 
     # 'Global' time counter
     time_start = 0
+
+    # Global list to store best solution
+    solution_params = (
+        [],  # solution
+        float('-inf'),  # solution_val
+        [],  # solution_routes
+        [],  # solution_vehicles
+        []  # solution_init_loads
+    )
 
     # Calculating cost of given routes
     def calculate_cost(routes):
@@ -56,12 +68,18 @@ def genetic_algorithm(
                 else:  # idx > 0
                     current_loads[idx] = current_loads[idx - 1] + demand
 
+        # Vehicle load check
+        for current_load in current_loads:
+            if current_load > chosen_vehicle.capacity:
+                return 0
+
         # Route simulating
         vehicle_load = initial_load
         for demand in demands:
             if vehicle_load > chosen_vehicle.capacity:
                 return 0  # False
             vehicle_load -= demand
+
         return initial_load + 1  # True
                                  # initial_load = [0, vehicle_capacity]
                                  # initial_load + 1 = [1, vehicle_capacity + 1]
@@ -184,7 +202,19 @@ def genetic_algorithm(
             )
             init_loads.append(route_load)
 
-        return -calculate_cost(routes)  # routes, vehicles, init_loads
+        fitness_value = -calculate_cost(routes)
+
+        nonlocal solution_params
+        if fitness_value > solution_params[1]:
+            solution_params = (
+                solution,
+                -fitness_value,
+                routes,
+                vehicles,
+                init_loads
+            )
+
+        return fitness_value
 
     # Genetic algorithm
 
@@ -199,23 +229,23 @@ def genetic_algorithm(
         crossover = one_point_crossover
         gene_space = {'low': 0, 'high': 1}  # [Float]
 
-    ga_instance = pygad.GA(num_generations=num_generations,
-                           on_generation=stop_at_generation,
-                           num_parents_mating=num_parents_mating,
-                           fitness_func=fitness_function,
-                           sol_per_pop=sol_per_pop,
-                           num_genes=graph.get_client_vertices_len(),
-                           gene_space=gene_space,
-                           allow_duplicate_genes=False,
-                           parent_selection_type=roulette_selection,
-                           keep_parents=keep_parents,
-                           crossover_type=crossover,
-                           mutation_type=mutation_type,
-                           mutation_percent_genes=mutation_percent_genes)
+    ga_instance = pygad.GA(
+        num_generations=num_generations,
+        on_generation=stop_at_generation,
+        num_parents_mating=num_parents_mating,
+        fitness_func=fitness_function,
+        sol_per_pop=sol_per_pop,
+        num_genes=graph.get_client_vertices_len(),
+        gene_space=gene_space,
+        allow_duplicate_genes=False,
+        parent_selection_type=roulette_selection,
+        keep_parents=keep_parents,
+        crossover_type=crossover,
+        mutation_type=mutation_type,
+        mutation_percent_genes=mutation_percent_genes
+    )
 
     time_start = time.time()
     ga_instance.run()
-# todo: proper solution to be returned; crossover, mutation;      params
-    solution, solution_fitness, solution_id = ga_instance.best_solution()
-    print(f"Parameters of the best solution : {solution}")
-    print(f"Fitness value of the best solution = {-solution_fitness}")
+
+    return solution_params

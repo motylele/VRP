@@ -87,9 +87,10 @@ elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
     sol_per_pop = 10 #
     keep_parents = 1  # automat
     num_parents_mating = 2 # automat
-    parent_selection_type = "sss" #
-    crossover_type = "single_point" #
-    mutation_type = "random" #
+    parent_selection_type = "sss"  #
+    crossover_type = Crossover.SINGLE_POINT_CROSSOVER
+    # crossover_type = Crossover.ORDER_CROSSOVER
+    mutation_type = "random"  #
     mutation_percent_genes = 20 #
 
     ga_instance = genetic_algorithm(
@@ -99,11 +100,22 @@ elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
         sol_per_pop=sol_per_pop,
         keep_parents=keep_parents,
         num_parents_mating=num_parents_mating,
-        crossover_type=Crossover.SINGLE_POINT_CROSSOVER,
-        # crossover_type=Crossover.ORDER_CROSSOVER,
+        crossover_type=crossover_type,
         mutation_type=mutation_type,
         mutation_percent_genes=mutation_percent_genes
     )
+
+    # Displaying solution
+    display_solution(ga_instance)
+
+    # Adjacency matrix
+    # graph.print_adj_matrix()
+
+    # Displaying client vertices parameters
+    graph.print_client_vertices_params()
+
+    # Displaying graph with overlaid solution routes
+    # graph.print_graph_and_routes(ga_instance)
 
 elif algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM:
     print("WIP")
