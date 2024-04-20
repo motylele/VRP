@@ -1,17 +1,11 @@
-from enum import Enum
+import numpy
+
 from Descent import Neighborhood, display_solution
+from Enums import Algorithm, Crossover
 from Genetic import genetic_algorithm
 from Graph import Graph
 from MultistartDescent import multistart_descent
 from SimulatedAnnealing import simulated_annealing
-
-
-# Enum for choosing algorithm
-class Algorithm(Enum):
-    MULTISTART_DESCENT = 1
-    SIMULATED_ANNEALING = 2
-    GENETIC_ALGORITHM = 3
-    HYBRID_GENETIC_ALGORITHM = 4
 
 
 vehicles_and_capacities = [
@@ -41,8 +35,9 @@ graph = Graph(
 
 # Algorithm global params
 # algorithm_type = Algorithm.MULTISTART_DESCENT
-algorithm_type = Algorithm.SIMULATED_ANNEALING
-# algorithm_type = Algorithm.GENETIC_ALGORITHM
+# algorithm_type = Algorithm.SIMULATED_ANNEALING
+algorithm_type = Algorithm.GENETIC_ALGORITHM
+
 time_limit = 5
 
 
@@ -104,8 +99,8 @@ elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
         sol_per_pop=sol_per_pop,
         keep_parents=keep_parents,
         num_parents_mating=num_parents_mating,
-        parent_selection_type=parent_selection_type,
-        crossover_type=crossover_type,
+        crossover_type=Crossover.SINGLE_POINT_CROSSOVER,
+        # crossover_type=Crossover.ORDER_CROSSOVER,
         mutation_type=mutation_type,
         mutation_percent_genes=mutation_percent_genes
     )
@@ -114,4 +109,3 @@ elif algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM:
     print("WIP")
 else:
     print("No such option.")
-

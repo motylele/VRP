@@ -1,12 +1,4 @@
-from enum import Enum
-
-# todo: function descriptions
-
-
-# Enum for neighborhood select type
-class Neighborhood(Enum):
-    INSERT = 1
-    SWAP = 2
+from Enums import Neighborhood
 
 
 # Displaying descent algorithm output

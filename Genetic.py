@@ -1,6 +1,7 @@
 import pygad
 import numpy
 import time
+from Enums import Crossover
 
 
 def genetic_algorithm(
@@ -10,7 +11,6 @@ def genetic_algorithm(
         sol_per_pop,
         keep_parents,
         num_parents_mating,
-        parent_selection_type,
         crossover_type,
         mutation_type,
         mutation_percent_genes):
@@ -70,18 +70,57 @@ def genetic_algorithm(
     def create_route(route, warehouse):
         return [warehouse.index] + list(route) + [warehouse.index]
 
+    def roulette_selection(fitness, num_parents, ga_instance):
+        total_fitness = numpy.sum(fitness)
+
+        probabilities = fitness / total_fitness
+
+        selected_indices = numpy.random.choice(range(len(fitness)), size=num_parents, p=probabilities)
+        selected_parents = ga_instance.population[selected_indices]
+
+        return selected_parents, selected_indices
+
     def one_point_crossover(parents, offspring_size, ga_instance):
         offspring = []
-
-        for i in range(offspring_size[0]):
-            parent1 = parents[i % parents.shape[0], :]
-            parent2 = parents[(i + 1) % parents.shape[0], :]
+        idx = 0
+        while len(offspring) != offspring_size[0]:
+            parent1 = parents[idx % parents.shape[0], :].copy()
+            parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
 
             split_point = numpy.random.choice(range(offspring_size[1]))
 
             parent1[split_point:] = parent2[split_point:]
 
             offspring.append(parent1)
+
+            idx += 1
+
+        return numpy.array(offspring)
+
+    def order_crossover(parents, offspring_size, ga_instance):
+        offspring = []
+        idx = 0
+        while len(offspring) != offspring_size[0]:
+            parent1 = parents[idx % parents.shape[0], :].copy()
+            parent2 = parents[(idx + 1) % parents.shape[0], :].copy()
+
+            split_points = sorted(numpy.random.choice(range(offspring_size[1]), size=2))
+
+            mask = numpy.zeros(offspring_size[1], dtype=bool)
+            mask[split_points[0]:split_points[1] + 1] = True
+
+            offspring_candidate = parent1[split_points[0]:split_points[1] + 1]
+
+            idx_parent2 = 0
+            for i in range(offspring_size[1]):
+                if not mask[i]:
+                    while parent2[idx_parent2] in offspring_candidate:
+                        idx_parent2 += 1
+                    offspring_candidate = numpy.insert(offspring_candidate, i, parent2[idx_parent2])
+                    idx_parent2 += 1
+            offspring.append(offspring_candidate)
+
+            idx += 1
 
         return numpy.array(offspring)
 
@@ -91,7 +130,11 @@ def genetic_algorithm(
 
     # Fitness function calculating solution fitness value
     def fitness_function(ga_instance, solution, solution_id):
-        solution = [int(x) for x in solution]
+
+        if crossover_type == Crossover.ORDER_CROSSOVER:
+            solution = [int(x) for x in solution]
+        elif crossover_type == Crossover.SINGLE_POINT_CROSSOVER:
+            solution = list(numpy.argsort(solution) + 1)
 
         route = None
         route_load = None
@@ -143,17 +186,30 @@ def genetic_algorithm(
 
         return -calculate_cost(routes)  # routes, vehicles, init_loads
 
+    # Genetic algorithm
+
+    crossover = None
+    gene_space = None
+
+    if crossover_type == Crossover.ORDER_CROSSOVER:
+        crossover = order_crossover
+        gene_space = list(range(1, graph.get_client_vertices_len() + 1))  # [Int]
+
+    elif crossover_type == Crossover.SINGLE_POINT_CROSSOVER:
+        crossover = one_point_crossover
+        gene_space = {'low': 0, 'high': 1}  # [Float]
+
     ga_instance = pygad.GA(num_generations=num_generations,
                            on_generation=stop_at_generation,
                            num_parents_mating=num_parents_mating,
                            fitness_func=fitness_function,
                            sol_per_pop=sol_per_pop,
                            num_genes=graph.get_client_vertices_len(),
-                           gene_space=list(range(1, graph.get_client_vertices_len() + 1)),
+                           gene_space=gene_space,
                            allow_duplicate_genes=False,
-                           parent_selection_type=parent_selection_type,
+                           parent_selection_type=roulette_selection,
                            keep_parents=keep_parents,
-                           crossover_type=one_point_crossover,
+                           crossover_type=crossover,
                            mutation_type=mutation_type,
                            mutation_percent_genes=mutation_percent_genes)
 
