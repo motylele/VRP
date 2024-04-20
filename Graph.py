@@ -214,6 +214,9 @@ class Graph:
     def get_vertex(self, vertex_idx):
         return self.list_client_vertices[vertex_idx - 1]
 
+    def get_client_vertices_len(self):
+        return len(self.list_client_vertices)
+
     #########################
     # GET_CLOSEST_WAREHOUSE()
     #########################

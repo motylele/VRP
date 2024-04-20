@@ -19,28 +19,30 @@ vehicles_and_capacities = [
     (5, 8)     # 5 vehicles with capacity 8
 ]
 
-edges_range = (
+edges_range = (  # default values given
     1.0,  # min distance between two nodes
     10.0  # max
 )
-vertices_range = (
+vertices_range = (  # default values given
     0,  # min value for both client vertex capacity and items stored
     10  # max
 )
 
 # Setting graph parameters
 graph = Graph(
-    num_vertices=8,
+    num_vertices=10,
     num_warehouses=3,
     vehicles_and_capacities=vehicles_and_capacities,
-    generate_new_edges=True,
+    generate_new_edges=False,
     edges_range=edges_range,
-    generate_new_vertices=True,
+    generate_new_vertices=False,
     vertices_range=vertices_range
 )
 
 # Algorithm global params
-algorithm_type = Algorithm.GENETIC_ALGORITHM
+# algorithm_type = Algorithm.MULTISTART_DESCENT
+algorithm_type = Algorithm.SIMULATED_ANNEALING
+# algorithm_type = Algorithm.GENETIC_ALGORITHM
 time_limit = 5
 
 
@@ -49,23 +51,23 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT:
 
     # Run algorithm
     md_instance = multistart_descent(
-        graph,
-        num_iterations,
-        time_limit,
-        Neighborhood.INSERT  # or SWAP
+        graph=graph,
+        num_iterations=num_iterations,
+        time_limit=time_limit,
+        neighborhood_type=Neighborhood.INSERT  # or SWAP
     )
 
     # Displaying solution
     display_solution(md_instance)
 
     # Adjacency matrix
-    graph.print_adj_matrix()
+    # graph.print_adj_matrix()
 
     # Displaying client vertices parameters
-    graph.print_client_vertices_params()
+    # graph.print_client_vertices_params()
 
     # Displaying graph with overlaid solution routes
-    graph.print_graph_and_routes(md_instance)
+    # graph.print_graph_and_routes(md_instance)
 
 elif algorithm_type == Algorithm.SIMULATED_ANNEALING:
     num_iterations = 30
@@ -74,18 +76,40 @@ elif algorithm_type == Algorithm.SIMULATED_ANNEALING:
 
     # Run algorithm
     sa_instance = simulated_annealing(
-        graph,
-        num_iterations,
-        time_limit,
-        initial_temperature,
-        final_temperature,
-        Neighborhood.INSERT  # or SWAP
+        graph=graph,
+        num_iterations=num_iterations,
+        time_limit=time_limit,
+        initial_temperature=initial_temperature,
+        final_temperature=final_temperature,
+        neighborhood_type=Neighborhood.INSERT  # or SWAP
     )
 
+    # Displaying solution
     display_solution(sa_instance)
 
 elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
-    genetic_algorithm(graph)
+    num_generations = 30 # todo: add
+    sol_per_pop = 10 #
+    keep_parents = 1  # automat
+    num_parents_mating = 2 # automat
+    parent_selection_type = "sss" #
+    crossover_type = "single_point" #
+    mutation_type = "random" #
+    mutation_percent_genes = 20 #
+
+    ga_instance = genetic_algorithm(
+        graph=graph,
+        num_generations=num_generations,
+        time_limit=time_limit,
+        sol_per_pop=sol_per_pop,
+        keep_parents=keep_parents,
+        num_parents_mating=num_parents_mating,
+        parent_selection_type=parent_selection_type,
+        crossover_type=crossover_type,
+        mutation_type=mutation_type,
+        mutation_percent_genes=mutation_percent_genes
+    )
+
 elif algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM:
     print("WIP")
 else:

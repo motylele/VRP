@@ -1,8 +1,22 @@
-import numpy
 import pygad
+import numpy
+import time
 
 
-def genetic_algorithm(graph):
+def genetic_algorithm(
+        graph,
+        num_generations,
+        time_limit,
+        sol_per_pop,
+        keep_parents,
+        num_parents_mating,
+        parent_selection_type,
+        crossover_type,
+        mutation_type,
+        mutation_percent_genes):
+
+    # 'Global' time counter
+    time_start = 0
 
     # Calculating cost of given routes
     def calculate_cost(routes):
@@ -56,6 +70,25 @@ def genetic_algorithm(graph):
     def create_route(route, warehouse):
         return [warehouse.index] + list(route) + [warehouse.index]
 
+    def one_point_crossover(parents, offspring_size, ga_instance):
+        offspring = []
+
+        for i in range(offspring_size[0]):
+            parent1 = parents[i % parents.shape[0], :]
+            parent2 = parents[(i + 1) % parents.shape[0], :]
+
+            split_point = numpy.random.choice(range(offspring_size[1]))
+
+            parent1[split_point:] = parent2[split_point:]
+
+            offspring.append(parent1)
+
+        return numpy.array(offspring)
+
+    def stop_at_generation(ga_instance):
+        if time.time() - time_start >= time_limit:
+            return "stop"
+
     # Fitness function calculating solution fitness value
     def fitness_function(ga_instance, solution, solution_id):
         solution = [int(x) for x in solution]
@@ -108,42 +141,25 @@ def genetic_algorithm(graph):
             )
             init_loads.append(route_load)
 
-        return -calculate_cost(routes) #, (routes, vehicles, init_loads)
-
-    # Genetic algorithm
-
-    sol = graph.get_vertices_permutation()
-    print(sol)
-    num_generations = 50
-    num_parents_mating = 4
-    sol_per_pop = 8
-    num_genes = len(sol)
-    gene_space = list(range(1, len(sol) + 1))
-    parent_selection_type = "sss"
-    keep_parents = 1
-    crossover_type = "single_point"
-    mutation_type = "random"
-    mutation_percent_genes = 10
+        return -calculate_cost(routes)  # routes, vehicles, init_loads
 
     ga_instance = pygad.GA(num_generations=num_generations,
+                           on_generation=stop_at_generation,
                            num_parents_mating=num_parents_mating,
                            fitness_func=fitness_function,
                            sol_per_pop=sol_per_pop,
-                           num_genes=num_genes,
-                           gene_space=gene_space,
+                           num_genes=graph.get_client_vertices_len(),
+                           gene_space=list(range(1, graph.get_client_vertices_len() + 1)),
                            allow_duplicate_genes=False,
                            parent_selection_type=parent_selection_type,
                            keep_parents=keep_parents,
-                           crossover_type=crossover_type,
+                           crossover_type=one_point_crossover,
                            mutation_type=mutation_type,
                            mutation_percent_genes=mutation_percent_genes)
 
+    time_start = time.time()
     ga_instance.run()
-
-    solution, solution_fitness, solution_idx = ga_instance.best_solution()
-    print("Parameters of the best solution : {solution}".format(solution=solution))
-    print("Fitness value of the best solution = {solution_fitness}".format(solution_fitness=solution_fitness))
-
-    # Accessing the extra information returned by the fitness function
-    # extra_info = solution_fitness[1]
-    # print("Extra information: ", extra_info)
+# todo: proper solution to be returned; crossover, mutation;      params
+    solution, solution_fitness, solution_id = ga_instance.best_solution()
+    print(f"Parameters of the best solution : {solution}")
+    print(f"Fitness value of the best solution = {-solution_fitness}")
