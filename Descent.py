@@ -38,7 +38,7 @@ def generate_swap_neighborhood(solution):  # size: n(n - 1)/2
 
 
 # Descent algorithm
-def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
+def descent_algorithm(graph, init_solution=None, neighborhood_type=Neighborhood.INSERT):
 
     # Calculating cost of given routes
     def calculate_cost(routes):
@@ -150,7 +150,11 @@ def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
         return calculate_cost(routes), routes, vehicles, init_loads
 
     # Descent algorithm
-    solution = graph.get_vertices_permutation()
+    solution = None
+    if init_solution is not None and init_solution.any():
+        solution = init_solution.astype(int).tolist()
+    else:
+        solution = graph.get_vertices_permutation()
 
     neighborhood = []
     if neighborhood_type == Neighborhood.INSERT:
@@ -179,6 +183,8 @@ def descent_algorithm(graph, neighborhood_type=Neighborhood.INSERT):
                 neighbor_vehicles,
                 neighbor_init_loads
             )
-
-    return solution_params
+    if init_solution is not None and init_solution.any():
+        return solution
+    else:
+        return solution_params
 

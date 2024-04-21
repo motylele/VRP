@@ -4,6 +4,7 @@ from Descent import Neighborhood, display_solution
 from Enums import Algorithm, Crossover
 from Genetic import genetic_algorithm
 from Graph import Graph
+from HybridGenetic import hybrid_genetic_algorithm
 from MultistartDescent import multistart_descent
 from SimulatedAnnealing import simulated_annealing
 
@@ -24,7 +25,7 @@ vertices_range = (  # default values given
 
 # Setting graph parameters
 graph = Graph(
-    num_vertices=10,
+    num_vertices=100,
     num_warehouses=3,
     vehicles_and_capacities=vehicles_and_capacities,
     generate_new_edges=False,
@@ -34,15 +35,16 @@ graph = Graph(
 )
 
 # Algorithm global params
-# algorithm_type = Algorithm.MULTISTART_DESCENT
-# algorithm_type = Algorithm.SIMULATED_ANNEALING
-algorithm_type = Algorithm.GENETIC_ALGORITHM
+# algorithm_type = Algorithm.MULTISTART_DESCENT  # v:100, t:60 -> 489
+# algorithm_type = Algorithm.SIMULATED_ANNEALING  # v:100, t:60 -> 548
+# algorithm_type = Algorithm.GENETIC_ALGORITHM  # v:100, t:60 -> 524
+# algorithm_type = Algorithm.HYBRID_GENETIC_ALGORITHM  # v:100, t:60 -> 510
 
-time_limit = 5
+time_limit = 60
 
 
 if algorithm_type == Algorithm.MULTISTART_DESCENT:
-    num_iterations = 5
+    num_iterations = 50
 
     # Run algorithm
     md_instance = multistart_descent(
@@ -88,9 +90,9 @@ elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
     keep_parents = 1  # automat
     num_parents_mating = 2 # automat
     parent_selection_type = "sss"  #
-    crossover_type = Crossover.SINGLE_POINT_CROSSOVER
-    # crossover_type = Crossover.ORDER_CROSSOVER
-    mutation_type = "random"  #
+    # crossover_type = Crossover.SINGLE_POINT_CROSSOVER
+    crossover_type = Crossover.ORDER_CROSSOVER
+    mutation_type = "swap"  #
     mutation_percent_genes = 20 #
 
     ga_instance = genetic_algorithm(
@@ -106,18 +108,50 @@ elif algorithm_type == Algorithm.GENETIC_ALGORITHM:
     )
 
     # Displaying solution
-    display_solution(ga_instance)
+    # display_solution(ga_instance)
 
     # Adjacency matrix
     # graph.print_adj_matrix()
 
     # Displaying client vertices parameters
-    graph.print_client_vertices_params()
+    # graph.print_client_vertices_params()
 
     # Displaying graph with overlaid solution routes
     # graph.print_graph_and_routes(ga_instance)
 
 elif algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM:
-    print("WIP")
+    num_generations = 20 # todo: add
+    sol_per_pop = 10 #
+    keep_parents = 1  # automat
+    num_parents_mating = 2 # automat
+    parent_selection_type = "sss"  #
+    # crossover_type = Crossover.SINGLE_POINT_CROSSOVER
+    crossover_type = Crossover.ORDER_CROSSOVER
+    mutation_type = "swap"  #
+    mutation_percent_genes = 20 #
+
+    hg_instance = hybrid_genetic_algorithm(
+        graph=graph,
+        num_generations=num_generations,
+        time_limit=time_limit,
+        sol_per_pop=sol_per_pop,
+        keep_parents=keep_parents,
+        num_parents_mating=num_parents_mating,
+        crossover_type=crossover_type,
+        mutation_type=mutation_type,
+        mutation_percent_genes=mutation_percent_genes
+    )
+
+    # Displaying solution
+    # display_solution(hg_instance)
+
+    # Adjacency matrix
+    # graph.print_adj_matrix()
+
+    # Displaying client vertices parameters
+    # graph.print_client_vertices_params()
+
+    # Displaying graph with overlaid solution routes
+    # graph.print_graph_and_routes(hg_instance)
 else:
     print("No such option.")

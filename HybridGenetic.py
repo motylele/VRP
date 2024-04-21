@@ -1,4 +1,5 @@
-from Enums import Crossover
+from Descent import descent_algorithm
+from Enums import Crossover, Neighborhood
 import warnings
 import pygad
 import numpy
@@ -7,7 +8,7 @@ import time
 # Ignore constant warning
 warnings.filterwarnings("ignore", message="The 'delay_after_gen' parameter is deprecated*")
 
-def genetic_algorithm(
+def hybrid_genetic_algorithm(
         graph,
         num_generations,
         time_limit,
@@ -142,13 +143,25 @@ def genetic_algorithm(
 
         return numpy.array(offspring)
 
-    def stop_at_generation(ga_instance):
+    def on_generation(ga_instance):
         if time.time() - time_start >= time_limit:
             return "stop"
 
+    def on_mutation(ga_instance, offspring_mutation):
+        descent_offspring = []
+        for offspring in offspring_mutation:
+            descent_offspring.append(
+                descent_algorithm(
+                    graph,
+                    init_solution=offspring,
+                    neighborhood_type=Neighborhood.SWAP
+                )
+            )
+
+        return descent_offspring
+
     # Fitness function calculating solution fitness value
     def fitness_function(ga_instance, solution, solution_id):
-
         if crossover_type == Crossover.ORDER_CROSSOVER:
             solution = [int(x) for x in solution]
         elif crossover_type == Crossover.SINGLE_POINT_CROSSOVER:
@@ -216,8 +229,7 @@ def genetic_algorithm(
 
         return fitness_value
 
-    # Genetic algorithm
-
+    # Hybrid genetic algorithm
     crossover = None
     gene_space = None
 
@@ -231,7 +243,8 @@ def genetic_algorithm(
 
     ga_instance = pygad.GA(
         num_generations=num_generations,
-        on_generation=stop_at_generation,
+        on_generation=on_generation,
+        on_mutation=on_mutation,
         num_parents_mating=num_parents_mating,
         fitness_func=fitness_function,
         sol_per_pop=sol_per_pop,
