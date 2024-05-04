@@ -12,12 +12,8 @@ def hybrid_genetic_algorithm(
         graph,
         num_generations,
         time_limit,
-        sol_per_pop,
-        keep_parents,
-        num_parents_mating,
-        crossover_type,
-        mutation_type,
-        mutation_percent_genes):
+        descent_percent,
+        crossover_type):
 
     # 'Global' time counter
     time_start = 0
@@ -89,6 +85,12 @@ def hybrid_genetic_algorithm(
     def create_route(route, warehouse):
         return [warehouse.index] + list(route) + [warehouse.index]
 
+    def calculate_population_size(chromosome_length):
+        coefficient = 3
+        offset = 10
+        population_size = int(coefficient * chromosome_length + offset)
+        return population_size
+
     def roulette_selection(fitness, num_parents, ga_instance):
         total_fitness = numpy.sum(fitness)
 
@@ -148,17 +150,17 @@ def hybrid_genetic_algorithm(
             return "stop"
 
     def on_mutation(ga_instance, offspring_mutation):
-        descent_offspring = []
-        for offspring in offspring_mutation:
-            descent_offspring.append(
-                descent_algorithm(
-                    graph,
-                    init_solution=offspring,
-                    neighborhood_type=Neighborhood.SWAP
-                )
+        num_to_modify = int(len(offspring_mutation) * descent_percent / 100)
+        selected_indices = numpy.random.choice(len(offspring_mutation), num_to_modify, replace=False)
+
+        for idx in selected_indices:
+            offspring_mutation[idx] = descent_algorithm(
+                graph,
+                init_solution=offspring_mutation[idx],
+                neighborhood_type=Neighborhood.SWAP
             )
 
-        return descent_offspring
+        return offspring_mutation
 
     # Fitness function calculating solution fitness value
     def fitness_function(ga_instance, solution, solution_id):
@@ -221,7 +223,7 @@ def hybrid_genetic_algorithm(
         if fitness_value > solution_params[1]:
             solution_params = (
                 solution,
-                -fitness_value,
+                fitness_value,
                 routes,
                 vehicles,
                 init_loads
@@ -241,6 +243,13 @@ def hybrid_genetic_algorithm(
         crossover = one_point_crossover
         gene_space = {'low': 0, 'high': 1}  # [Float]
 
+    chromosome_length = graph.get_client_vertices_len()
+    mutation_percent_genes = (1 / chromosome_length) * 100
+    mutation_type = "swap"
+    keep_parents = 1
+    sol_per_pop = calculate_population_size(chromosome_length)
+    num_parents_mating = int(0.4 * sol_per_pop)
+
     ga_instance = pygad.GA(
         num_generations=num_generations,
         on_generation=on_generation,
@@ -248,7 +257,7 @@ def hybrid_genetic_algorithm(
         num_parents_mating=num_parents_mating,
         fitness_func=fitness_function,
         sol_per_pop=sol_per_pop,
-        num_genes=graph.get_client_vertices_len(),
+        num_genes=chromosome_length,
         gene_space=gene_space,
         allow_duplicate_genes=False,
         parent_selection_type=roulette_selection,
@@ -261,9 +270,9 @@ def hybrid_genetic_algorithm(
     time_start = time.time()
     ga_instance.run()
 
-    solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
-    print(f"Parameters of the best solution : {solution}")
-    print(f"Fitness value of the best solution = {solution_fitness}")
-    print(f"Index of the best solution : {solution_idx}")
+    # solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
+    # print(f"Parameters of the best solution : {solution}")
+    # print(f"Fitness value of the best solution = {solution_fitness}")
+    # print(f"Index of the best solution : {solution_idx}")
 
-    # return solution_params
+    return solution_params

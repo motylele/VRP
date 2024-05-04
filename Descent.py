@@ -184,7 +184,7 @@ def descent_algorithm(graph, init_solution=None, neighborhood_type=Neighborhood.
                 neighbor_init_loads
             )
     if init_solution is not None and init_solution.any():
-        return solution
+        return solution_params[0]
     else:
         return solution_params
 

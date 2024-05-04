@@ -32,10 +32,10 @@ class Graph:
                  vehicles_and_capacities,
                  generate_new_edges=False,
                  edges_range=(1.0, 10.0),
-                 filename_edges="graph-edges.txt",
+                 filename_edges="data/graph-edges.txt",
                  generate_new_vertices=False,
                  vertices_range=(0, 10),
-                 filename_vertices="graph-vertices.txt"):
+                 filename_vertices="data/graph-vertices.txt"):
 
         if num_vertices < 2:
             raise ValueError("Graph must have at least two vertices.")
@@ -309,22 +309,17 @@ class Graph:
         warehouses = [warehouse.index for warehouse in self.list_warehouse_vertices]
 
         pos = nx.spring_layout(self.graph, seed=42)
-        nx.draw(self.graph, pos, with_labels=True, node_color='b')
+        nx.draw(self.graph, pos, with_labels=True, node_color='black', edge_color='gray', font_color='w')
         colors = ['g', 'b', 'c', 'm', 'y', 'k']  # Add more colors if needed
 
         for idx, route in enumerate(routes, start=1):
             edges = [(route[i], route[i + 1]) for i in range(len(route) - 1)]
             color = colors[(idx - 1) % len(colors)]  # Use modulo to cycle through the list of colors
-            nx.draw_networkx_edges(self.graph, pos, edgelist=edges, edge_color=color, width=3.0, label=f'Route {idx}')
+            nx.draw_networkx_edges(self.graph, pos, edgelist=edges, edge_color=color, width=4.0, label=f'Route {idx}')
 
         labels = nx.get_edge_attributes(self.graph, 'weight')
-        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=labels)
+        nx.draw_networkx_edge_labels(self.graph, pos, edge_labels=labels, font_color='black', font_size=8)
         nx.draw_networkx_nodes(self.graph, pos, nodelist=warehouses, node_color='r', node_size=300)
 
         plt.legend(fontsize=15)
         plt.show()
-
-        ''' max_cap = [8, 8]
-                3  1  2  4 
-       d        1  2 -1  8
-        '''

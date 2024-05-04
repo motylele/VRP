@@ -41,7 +41,6 @@ def generate_swap_neighborhood(solution):  # size: n(n - 1)/2
 
 # Accepting result with given probability
 def accept_with_probability(probability):
-    # print(probability) # 10 looks ok
     return random.random() < probability
 
 # Simulated annealing
@@ -160,7 +159,13 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
     beta = (initial_temperature - final_temperature) / ((num_iterations - 1) * initial_temperature * final_temperature)
     solution = graph.get_vertices_permutation()
     current_temperature = initial_temperature
-    solution_params = ()
+    best_solution_params = (
+        [],
+        float('inf'),
+        [],
+        [],
+        []
+    )
 
     start_time = time.time()
     for i in range(num_iterations):
@@ -185,8 +190,10 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
 
         for neighbor in neighborhood:
             neighbor_val, neighbor_routes, neighbor_vehicles, neighbor_init_loads = fitness_function(neighbor)
-            probability = math.exp((solution_params[1] - neighbor_val) / current_temperature)  # todo check?
-            if solution_params[1] > neighbor_val or accept_with_probability(probability):
+            probability = math.exp((solution_params[1] - neighbor_val) / current_temperature)
+
+            # print(f"current={solution_params[1]}, ", end="")
+            if accept_with_probability(probability):
                 solution_params = (
                     neighbor,
                     neighbor_val,
@@ -194,9 +201,13 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
                     neighbor_vehicles,
                     neighbor_init_loads
                 )
+            # print(f"neigh={neighbor_val}, probability={probability}")
+        # print("END")
+
+        if best_solution_params[1] > solution_params[1]:
+            best_solution_params = solution_params
 
         if i < num_iterations - 1:
-            # print(current_temperature)
             current_temperature = current_temperature / (1 + beta * current_temperature)
-
-    return solution_params
+        print(i)
+    return best_solution_params
