@@ -57,9 +57,13 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
 
     # Checking if vehicle with specified capacity can serve given solution
     def check_if_can_serve(partial_solution, chosen_vehicle):
+        discharged = sum([graph.get_vertex(vertex).discharged for vertex in partial_solution])
         demands = [graph.get_vertex(vertex).get_vertex_demand() for vertex in partial_solution]
         current_loads = [0] * len(demands)
         initial_load = 0
+
+        if discharged > chosen_vehicle.capacity:
+            return 0
 
         for idx, demand in enumerate(demands):
             if demand > 0:
@@ -86,15 +90,16 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
 
         # Vehicle load check
         for current_load in current_loads:
-            if current_load > chosen_vehicle.capacity:
+            if current_load > chosen_vehicle.capacity - discharged:
                 return 0
 
         # Route simulating
         vehicle_load = initial_load
         for demand in demands:
-            if vehicle_load > chosen_vehicle.capacity:
+            if vehicle_load > chosen_vehicle.capacity - discharged:
                 return 0  # False
             vehicle_load -= demand
+
         return initial_load + 1  # True
                                  # initial_load = [0, vehicle_capacity]
                                  # initial_load + 1 = [1, vehicle_capacity + 1]
@@ -192,7 +197,6 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
             neighbor_val, neighbor_routes, neighbor_vehicles, neighbor_init_loads = fitness_function(neighbor)
             probability = math.exp((solution_params[1] - neighbor_val) / current_temperature)
 
-            # print(f"current={solution_params[1]}, ", end="")
             if accept_with_probability(probability):
                 solution_params = (
                     neighbor,
@@ -201,13 +205,10 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
                     neighbor_vehicles,
                     neighbor_init_loads
                 )
-            # print(f"neigh={neighbor_val}, probability={probability}")
-        # print("END")
 
         if best_solution_params[1] > solution_params[1]:
             best_solution_params = solution_params
 
         if i < num_iterations - 1:
             current_temperature = current_temperature / (1 + beta * current_temperature)
-        print(i)
     return best_solution_params

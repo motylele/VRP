@@ -13,7 +13,8 @@ def hybrid_genetic_algorithm(
         num_generations,
         time_limit,
         descent_percent,
-        crossover_type):
+        crossover_type,
+        neighborhood_type):
 
     # 'Global' time counter
     time_start = 0
@@ -38,9 +39,13 @@ def hybrid_genetic_algorithm(
 
     # Checking if vehicle with specified capacity can serve given solution
     def check_if_can_serve(partial_solution, chosen_vehicle):
+        discharged = sum([graph.get_vertex(vertex).discharged for vertex in partial_solution])
         demands = [graph.get_vertex(vertex).get_vertex_demand() for vertex in partial_solution]
         current_loads = [0] * len(demands)
         initial_load = 0
+
+        if discharged > chosen_vehicle.capacity:
+            return 0
 
         for idx, demand in enumerate(demands):
             if demand > 0:
@@ -67,13 +72,13 @@ def hybrid_genetic_algorithm(
 
         # Vehicle load check
         for current_load in current_loads:
-            if current_load > chosen_vehicle.capacity:
+            if current_load > chosen_vehicle.capacity - discharged:
                 return 0
 
         # Route simulating
         vehicle_load = initial_load
         for demand in demands:
-            if vehicle_load > chosen_vehicle.capacity:
+            if vehicle_load > chosen_vehicle.capacity - discharged:
                 return 0  # False
             vehicle_load -= demand
 
@@ -154,11 +159,31 @@ def hybrid_genetic_algorithm(
         selected_indices = numpy.random.choice(len(offspring_mutation), num_to_modify, replace=False)
 
         for idx in selected_indices:
-            offspring_mutation[idx] = descent_algorithm(
+            vertices_order = []
+            if crossover_type == Crossover.SINGLE_POINT_CROSSOVER:
+                vertices_order = numpy.argsort(offspring_mutation[idx]) + 1
+            elif crossover_type == Crossover.ORDER_CROSSOVER:
+                vertices_order = offspring_mutation[idx]
+
+            desired_order = descent_algorithm(
                 graph,
-                init_solution=offspring_mutation[idx],
-                neighborhood_type=Neighborhood.SWAP
+                init_solution=vertices_order,
+                neighborhood_type=neighborhood_type
             )
+
+            if crossover_type == Crossover.SINGLE_POINT_CROSSOVER:
+                desired_order = [x - 1 for x in desired_order]
+                vertices_order = vertices_order - 1
+
+                rearranged_order = [0] * len(offspring_mutation[idx])
+
+                for new_index, target_index in enumerate(desired_order):
+                    rearranged_order[target_index] = offspring_mutation[idx][vertices_order[new_index]]
+
+                offspring_mutation[idx] = rearranged_order
+
+            elif crossover_type == Crossover.ORDER_CROSSOVER:
+                offspring_mutation[idx] = desired_order
 
         return offspring_mutation
 
@@ -270,8 +295,8 @@ def hybrid_genetic_algorithm(
     time_start = time.time()
     ga_instance.run()
 
-    # solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
-    # print(f"Parameters of the best solution : {solution}")
+    solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
+    print(f"Parameters of the best solution : {solution}")
     # print(f"Fitness value of the best solution = {solution_fitness}")
     # print(f"Index of the best solution : {solution_idx}")
 

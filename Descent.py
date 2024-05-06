@@ -51,9 +51,13 @@ def descent_algorithm(graph, init_solution=None, neighborhood_type=Neighborhood.
 
     # Checking if vehicle with specified capacity can serve given solution
     def check_if_can_serve(partial_solution, chosen_vehicle):
+        discharged = sum([graph.get_vertex(vertex).discharged for vertex in partial_solution])
         demands = [graph.get_vertex(vertex).get_vertex_demand() for vertex in partial_solution]
         current_loads = [0] * len(demands)
         initial_load = 0
+
+        if discharged > chosen_vehicle.capacity:
+            return 0
 
         for idx, demand in enumerate(demands):
             if demand > 0:
@@ -80,15 +84,16 @@ def descent_algorithm(graph, init_solution=None, neighborhood_type=Neighborhood.
 
         # Vehicle load check
         for current_load in current_loads:
-            if current_load > chosen_vehicle.capacity:
+            if current_load > chosen_vehicle.capacity - discharged:
                 return 0
 
         # Route simulating
         vehicle_load = initial_load
         for demand in demands:
-            if vehicle_load > chosen_vehicle.capacity:
+            if vehicle_load > chosen_vehicle.capacity - discharged:
                 return 0  # False
             vehicle_load -= demand
+
         return initial_load + 1  # True
                                  # initial_load = [0, vehicle_capacity]
                                  # initial_load + 1 = [1, vehicle_capacity + 1]
@@ -151,7 +156,7 @@ def descent_algorithm(graph, init_solution=None, neighborhood_type=Neighborhood.
 
     # Descent algorithm
     solution = None
-    if init_solution is not None and init_solution.any():
+    if init_solution is not None:
         solution = init_solution.astype(int).tolist()
     else:
         solution = graph.get_vertices_permutation()
@@ -183,7 +188,7 @@ def descent_algorithm(graph, init_solution=None, neighborhood_type=Neighborhood.
                 neighbor_vehicles,
                 neighbor_init_loads
             )
-    if init_solution is not None and init_solution.any():
+    if init_solution is not None:
         return solution_params[0]
     else:
         return solution_params

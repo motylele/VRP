@@ -30,6 +30,7 @@ class Graph:
                  num_vertices,
                  num_warehouses,
                  vehicles_and_capacities,
+                 discharged_percent,
                  generate_new_edges=False,
                  edges_range=(1.0, 10.0),
                  filename_edges="data/graph-edges.txt",
@@ -50,6 +51,7 @@ class Graph:
 
         self.num_vertices = num_vertices
         self.num_warehouses = num_warehouses
+        self.discharged_percent = discharged_percent
 
         self.edges_range= edges_range
         self.vertices_range = vertices_range
@@ -57,7 +59,7 @@ class Graph:
         self.filename_edges = filename_edges
         self.filename_vertices = filename_vertices
 
-        self.list_client_vertices = [ClientVertex(i, 0, 0)
+        self.list_client_vertices = [ClientVertex(i, 0, 0, 0)
                                      for i in range(1, self.num_vertices - self.num_warehouses + 1)]
         self.list_warehouse_vertices = [WarehouseVertex(i, vehicles_and_capacities)
                                         for i in range(-self.num_warehouses + 1, 1)]
@@ -155,7 +157,13 @@ class Graph:
     def generate_and_write_vertices_to_file(self, min_vert=0, max_vert=10):
         with open(self.filename_vertices, 'w') as file:
             for _ in range(self.num_vertices - self.num_warehouses):
-                file.write(f"{random.randint(min_vert, max_vert)}, {random.randint(min_vert, max_vert)}\n")
+                capacity = random.randint(min_vert, max_vert)
+                if random.randint(1, 100) <= self.discharged_percent:
+                    discharged = random.randint(0, capacity)
+                else:
+                    discharged = 0
+                stored = random.randint(min_vert, max_vert)
+                file.write(f"{discharged}, {capacity}, {stored}\n")
 
     ########################
     # READ_EDGES_FROM_FILE()
@@ -178,7 +186,8 @@ class Graph:
     def read_vertices_from_file(self):
         with open(self.filename_vertices, 'r') as file:
             for idx, line in enumerate(file):
-                capacity, stored = map(int, line.strip().split(','))
+                discharged, capacity, stored = map(int, line.strip().split(','))
+                self.list_client_vertices[idx].discharged = discharged
                 self.list_client_vertices[idx].capacity = capacity
                 self.list_client_vertices[idx].stored = stored
 
@@ -264,22 +273,27 @@ class Graph:
         print("\n")
 
     def print_client_vertices_params(self):
-        print("VERTEX:   ", end="")
+        print("VERTEX:       ", end="")
         for vertex in self.list_client_vertices:
             print(f"{vertex.index: 3}", end="")
         print()
 
-        print("DEMAND:   ", end="")
+        print("DISCHARGED:   ", end="")
+        for vertex in self.list_client_vertices:
+            print(f"{vertex.discharged: 3}", end="")
+        print()
+
+        print("DEMAND:       ", end="")
         for vertex in self.list_client_vertices:
             print(f"{vertex.get_vertex_demand(): 3}", end="")
         print()
 
-        print("CAPACITY: ", end="")
+        print("CAPACITY:     ", end="")
         for vertex in self.list_client_vertices:
             print(f"{vertex.capacity: 3}", end="")
         print()
 
-        print("STORED:   ", end="")
+        print("STORED:       ", end="")
         for vertex in self.list_client_vertices:
             print(f"{vertex.stored: 3}", end="")
         print()

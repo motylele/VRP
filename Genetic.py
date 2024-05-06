@@ -36,9 +36,13 @@ def genetic_algorithm(
 
     # Checking if vehicle with specified capacity can serve given solution
     def check_if_can_serve(partial_solution, chosen_vehicle):
+        discharged = sum([graph.get_vertex(vertex).discharged for vertex in partial_solution])
         demands = [graph.get_vertex(vertex).get_vertex_demand() for vertex in partial_solution]
         current_loads = [0] * len(demands)
         initial_load = 0
+
+        if discharged > chosen_vehicle.capacity:
+            return 0
 
         for idx, demand in enumerate(demands):
             if demand > 0:
@@ -65,13 +69,13 @@ def genetic_algorithm(
 
         # Vehicle load check
         for current_load in current_loads:
-            if current_load > chosen_vehicle.capacity:
+            if current_load > chosen_vehicle.capacity - discharged:
                 return 0
 
         # Route simulating
         vehicle_load = initial_load
         for demand in demands:
-            if vehicle_load > chosen_vehicle.capacity:
+            if vehicle_load > chosen_vehicle.capacity - discharged:
                 return 0  # False
             vehicle_load -= demand
 
