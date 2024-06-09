@@ -130,7 +130,7 @@ if algorithm_type == Algorithm.SIMULATED_ANNEALING or algorithm_type == Algorith
             print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
-            file.write(f"{sa_instance[1]}\n")
+            file.write(f"{i + 1}:\n {sa_instance}\n {all_solutions}\n\n")
 
             # Displaying solution
             display_solution(sa_instance)

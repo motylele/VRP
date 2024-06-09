@@ -66,7 +66,7 @@ def extract_data(prefix, discharged_percent, limit=50):
 
     num_warehouses = len(locations)
 
-    with open("opendata_vertices", 'w') as file:
+    with open("opendata_vertices.txt", 'w') as file:
         for station in station_informations:
 
             capacity = station['capacity']
@@ -82,7 +82,7 @@ def extract_data(prefix, discharged_percent, limit=50):
             locations.append((station['lat'], station['lon']))
 
     num_locations = len(locations)
-    with open("opendata_edges", 'w') as file:
+    with open("opendata_edges.txt", 'w') as file:
         for i in range(num_locations):
             for j in range(num_locations):
                 if i != j:
@@ -90,7 +90,7 @@ def extract_data(prefix, discharged_percent, limit=50):
                                f"{j - num_warehouses + 1}, "
                                f"{compute_distance(locations[i], locations[j])}\n")
 
-    with open("opendata_locations", 'w') as file:
+    with open("opendata_locations.txt", 'w') as file:
         for i in range(num_locations):
             file.write(f"{i - num_warehouses + 1}, {locations[i][0]}, {locations[i][1]}\n")
 
