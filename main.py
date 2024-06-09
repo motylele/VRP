@@ -1,12 +1,12 @@
 import time
 
-from Utils import Algorithm, Crossover, Neighborhood, display_solution
-from Graph import Graph
+from architecture.Utils import Algorithm, Crossover, Neighborhood, display_solution
+from architecture.Graph import Graph
 
-from Genetic import genetic_algorithm
-from HybridGenetic import hybrid_genetic_algorithm
-from MultistartDescent import multistart_descent
-from SimulatedAnnealing import simulated_annealing
+from algorithms.Genetic import genetic_algorithm
+from algorithms.HybridGenetic import hybrid_genetic_algorithm
+from algorithms.MultistartDescent import multistart_descent
+from algorithms.SimulatedAnnealing import simulated_annealing
 
 vehicles_and_capacities = [
     (8, 15),   # 8 vehicles with capacity 12
@@ -82,7 +82,7 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT or algorithm_type == Algorithm
 
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Czas działania algorytmu: {elapsed_time} sekund")
+            print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
             file.write(f"{i + 1}:\n {md_instance}\n {all_solutions}\n\n")
@@ -127,7 +127,7 @@ if algorithm_type == Algorithm.SIMULATED_ANNEALING or algorithm_type == Algorith
 
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Czas działania algorytmu: {elapsed_time} sekund")
+            print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
             file.write(f"{sa_instance[1]}\n")
@@ -167,7 +167,7 @@ if algorithm_type == Algorithm.GENETIC_ALGORITHM or algorithm_type == Algorithm.
 
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Czas działania algorytmu: {elapsed_time} sekund")
+            print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
             file.write(f"{i + 1}:\n {ga_instance}\n {all_solutions}\n\n")
@@ -211,7 +211,7 @@ if algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM or algorithm_type == Alg
 
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Czas działania algorytmu: {elapsed_time} sekund")
+            print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
             file.write(f"{i + 1}:\n {hg_instance}\n {all_solutions}\n\n")

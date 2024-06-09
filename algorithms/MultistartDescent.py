@@ -1,4 +1,4 @@
-from Descent import descent_algorithm
+from algorithms.Descent import descent_algorithm
 import time
 
 

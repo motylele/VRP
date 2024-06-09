@@ -1,4 +1,4 @@
-from Utils import Crossover
+from architecture.Utils import Crossover
 import warnings
 import pygad
 import numpy

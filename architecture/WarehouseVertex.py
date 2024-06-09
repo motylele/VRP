@@ -1,4 +1,4 @@
-from Vehicle import Vehicle
+from architecture.Vehicle import Vehicle
 import random
 
 
@@ -10,11 +10,6 @@ class WarehouseVertex:
         self.latitude = latitude
         self.longitude = longitude
 
-    '''
-    POC:
-    - deleting vehicle if chosen: warehouse may run out of vehicles, but every route is served by different vehicle
-    - not deleting: every route may be served by the same vehicle <- current
-    '''
     # Probabilistic vehicle selection
     def select_vehicle(self):
         capacities = [vehicle.capacity for vehicle in self.list_vehicles]

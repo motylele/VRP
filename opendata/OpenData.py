@@ -1,17 +1,19 @@
+# OPEN DATA DOCUMENTATION
+# https://github.com/MobilityData/gbfs/blob/df473ca4adbff982d67b50ac00b625191591d8f8/gbfs.md
+
 import time
 import requests
 import random
 
 from APIKEY import api_key
-from Utils import Algorithm, Neighborhood, Crossover, display_solution
-from Genetic import genetic_algorithm
-from Graph import Graph
-from HybridGenetic import hybrid_genetic_algorithm
-from MultistartDescent import multistart_descent
-from SimulatedAnnealing import simulated_annealing
 
-# OPEN DATA DOCUMENTATION
-# https://github.com/MobilityData/gbfs/blob/df473ca4adbff982d67b50ac00b625191591d8f8/gbfs.md
+from architecture.Utils import Algorithm, Neighborhood, Crossover, display_solution
+from architecture.Graph import Graph
+
+from algorithms.Genetic import genetic_algorithm
+from algorithms.HybridGenetic import hybrid_genetic_algorithm
+from algorithms.MultistartDescent import multistart_descent
+from algorithms.SimulatedAnnealing import simulated_annealing
 
 
 # Getting matching station information by given prefix
@@ -64,7 +66,7 @@ def extract_data(prefix, discharged_percent, limit=50):
 
     num_warehouses = len(locations)
 
-    with open("opendata/opendata_vertices", 'w') as file:
+    with open("opendata_vertices", 'w') as file:
         for station in station_informations:
 
             capacity = station['capacity']
@@ -80,7 +82,7 @@ def extract_data(prefix, discharged_percent, limit=50):
             locations.append((station['lat'], station['lon']))
 
     num_locations = len(locations)
-    with open("opendata/opendata_edges", 'w') as file:
+    with open("opendata_edges", 'w') as file:
         for i in range(num_locations):
             for j in range(num_locations):
                 if i != j:
@@ -88,7 +90,7 @@ def extract_data(prefix, discharged_percent, limit=50):
                                f"{j - num_warehouses + 1}, "
                                f"{compute_distance(locations[i], locations[j])}\n")
 
-    with open("opendata/opendata_locations", 'w') as file:
+    with open("opendata_locations", 'w') as file:
         for i in range(num_locations):
             file.write(f"{i - num_warehouses + 1}, {locations[i][0]}, {locations[i][1]}\n")
 
@@ -124,8 +126,8 @@ graph = Graph(
     num_vertices=30,
     num_warehouses=2,
     vehicles_and_capacities=vehicles_and_capacities,
-    filename_edges="opendata/opendata_edges",
-    filename_vertices="opendata/opendata_vertices",
+    filename_edges="opendata_edges",
+    filename_vertices="opendata_vertices",
     real_data=True
 )
 
@@ -152,7 +154,7 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT or algorithm_type == Algorithm
     neighborhood_type = Neighborhood.INSERT
     # neighborhood_type = Neighborhood.SWAP
 
-    with open("output/md.txt", 'w') as file:
+    with open("../output/md.txt", 'w') as file:
         for i in range(runs):
             print(f"Iteration {i + 1} of {runs}")
 
@@ -195,7 +197,7 @@ if algorithm_type == Algorithm.SIMULATED_ANNEALING or algorithm_type == Algorith
     # neighborhood_type = Neighborhood.INSERT
     neighborhood_type = Neighborhood.SWAP
 
-    with open("output/sa.txt", 'w') as file:
+    with open("../output/sa.txt", 'w') as file:
         for i in range(runs):
             print(f"Iteration {i + 1} of {runs}")
 
@@ -237,7 +239,7 @@ if algorithm_type == Algorithm.GENETIC_ALGORITHM or algorithm_type == Algorithm.
     # crossover_type = Crossover.ORDER_CROSSOVER
     crossover_type = Crossover.SINGLE_POINT_CROSSOVER
 
-    with open("output/ga.txt", 'w') as file:
+    with open("../output/ga.txt", 'w') as file:
         for i in range(runs):
             print(f"Iteration {i + 1} of {runs}")
 
@@ -278,7 +280,7 @@ if algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM or algorithm_type == Alg
     # neighborhood_type = Neighborhood.INSERT
     neighborhood_type = Neighborhood.SWAP
 
-    with open("output/hg.txt", 'w') as file:
+    with open("../output/hg.txt", 'w') as file:
         for i in range(runs):
             print(f"Iteration {i + 1} of {runs}")
 

@@ -1,5 +1,5 @@
-from Descent import descent_algorithm
-from Utils import Crossover
+from algorithms.Descent import descent_algorithm
+from architecture.Utils import Crossover
 import warnings
 import pygad
 import numpy

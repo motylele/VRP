@@ -1,4 +1,4 @@
-from Utils import Neighborhood
+from architecture.Utils import Neighborhood
 
 
 # Generating insert neighborhood

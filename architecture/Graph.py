@@ -1,5 +1,5 @@
-from WarehouseVertex import WarehouseVertex
-from ClientVertex import ClientVertex
+from architecture.WarehouseVertex import WarehouseVertex
+from architecture.ClientVertex import ClientVertex
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
