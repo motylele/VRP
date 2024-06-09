@@ -25,6 +25,8 @@ def genetic_algorithm(
         []  # solution_init_loads
     )
 
+    all_solutions = []
+
     # Calculating cost of given routes
     def calculate_cost(routes):
         total_cost = 0
@@ -41,6 +43,7 @@ def genetic_algorithm(
         current_loads = [0] * len(demands)
         initial_load = 0
 
+        # Check number of batteries
         if discharged > chosen_vehicle.capacity:
             return 0
 
@@ -69,15 +72,15 @@ def genetic_algorithm(
 
         # Vehicle load check
         for current_load in current_loads:
-            if current_load > chosen_vehicle.capacity - discharged:
+            if current_load * 5 > chosen_vehicle.capacity - discharged:
                 return 0
 
         # Route simulating
-        vehicle_load = initial_load
+        vehicle_load = initial_load * 5
         for demand in demands:
             if vehicle_load > chosen_vehicle.capacity - discharged:
                 return 0  # False
-            vehicle_load -= demand
+            vehicle_load -= demand * 5
 
         return initial_load + 1  # True
                                  # initial_load = [0, vehicle_capacity]
@@ -218,7 +221,8 @@ def genetic_algorithm(
                 vehicles,
                 init_loads
             )
-            # print(solution_params[1])
+            all_solutions.append(fitness_value)
+
 
         return fitness_value
 
@@ -236,7 +240,7 @@ def genetic_algorithm(
         gene_space = {'low': 0, 'high': 1}  # [Float]
 
     chromosome_length = graph.get_client_vertices_len()
-    mutation_percent_genes = (1 / chromosome_length) * 100
+    mutation_percent_genes = (1 / chromosome_length) * 100 + 1
     mutation_type = "swap"
     keep_parents = 1
     sol_per_pop = calculate_population_size(chromosome_length)
@@ -266,4 +270,4 @@ def genetic_algorithm(
     # print(f"Fitness value of the best solution = {solution_fitness}")
     # print(f"Index of the best solution : {solution_idx}")
 
-    return solution_params
+    return solution_params, all_solutions

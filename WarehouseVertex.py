@@ -13,9 +13,11 @@ class WarehouseVertex:
     #               (10, 12),  # 10 vehicles with capacity 12
     #               (5, 8)     # 5 vehicles with capacity 8
     #           ]
-    def __init__(self, index, vehicles_and_capacities):
+    def __init__(self, index, vehicles_and_capacities, latitude=0, longitude=0):
         self.index = index
-        self.list_vehicles = [Vehicle(capacity) for count, capacity in vehicles_and_capacities for _ in range(count)]
+        self.list_vehicles = [Vehicle(capacity * 5) for count, capacity in vehicles_and_capacities for _ in range(count)]
+        self.latitude = latitude
+        self.longitude = longitude
 
     '''
     POC:

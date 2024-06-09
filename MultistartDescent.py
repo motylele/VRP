@@ -5,6 +5,7 @@ import time
 # Multistart descent algorithm
 def multistart_descent(graph, num_iterations, time_limit, neighborhood_type):
 
+    all_solutions = []
     best_descent_instance = None
     min_value = float('inf')
 
@@ -22,5 +23,6 @@ def multistart_descent(graph, num_iterations, time_limit, neighborhood_type):
         if current_value < min_value:
             min_value = current_value
             best_descent_instance = descent_instance
+            all_solutions.append(current_value)
 
-    return best_descent_instance
+    return best_descent_instance, all_solutions

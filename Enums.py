@@ -6,6 +6,8 @@ class Algorithm(Enum):
     SIMULATED_ANNEALING = 2
     GENETIC_ALGORITHM = 3
     HYBRID_GENETIC_ALGORITHM = 4
+    # ...
+    ALL = 10
 
 
 # [Neighborhood search] neighborhood selection type

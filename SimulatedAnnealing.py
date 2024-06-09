@@ -62,6 +62,7 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
         current_loads = [0] * len(demands)
         initial_load = 0
 
+        # Check number of batteries
         if discharged > chosen_vehicle.capacity:
             return 0
 
@@ -90,15 +91,15 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
 
         # Vehicle load check
         for current_load in current_loads:
-            if current_load > chosen_vehicle.capacity - discharged:
+            if current_load * 5 > chosen_vehicle.capacity - discharged:
                 return 0
 
         # Route simulating
-        vehicle_load = initial_load
+        vehicle_load = initial_load * 5
         for demand in demands:
             if vehicle_load > chosen_vehicle.capacity - discharged:
                 return 0  # False
-            vehicle_load -= demand
+            vehicle_load -= demand * 5
 
         return initial_load + 1  # True
                                  # initial_load = [0, vehicle_capacity]
@@ -171,6 +172,7 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
         [],
         []
     )
+    all_solutions = []
 
     start_time = time.time()
     for i in range(num_iterations):
@@ -205,10 +207,11 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
                     neighbor_vehicles,
                     neighbor_init_loads
                 )
+                all_solutions.append(neighbor_val)
 
         if best_solution_params[1] > solution_params[1]:
             best_solution_params = solution_params
 
         if i < num_iterations - 1:
             current_temperature = current_temperature / (1 + beta * current_temperature)
-    return best_solution_params
+    return best_solution_params, all_solutions

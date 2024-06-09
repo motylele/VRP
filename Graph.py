@@ -30,13 +30,14 @@ class Graph:
                  num_vertices,
                  num_warehouses,
                  vehicles_and_capacities,
-                 discharged_percent,
+                 discharged_percent=30,
                  generate_new_edges=False,
                  edges_range=(1.0, 10.0),
                  filename_edges="data/graph-edges.txt",
                  generate_new_vertices=False,
                  vertices_range=(0, 10),
-                 filename_vertices="data/graph-vertices.txt"):
+                 filename_vertices="data/graph-vertices.txt",
+                 real_data=False):
 
         if num_vertices < 2:
             raise ValueError("Graph must have at least two vertices.")
@@ -47,11 +48,10 @@ class Graph:
         if num_warehouses > num_vertices - 1:
             raise ValueError("At least one client vertex is required.")
 
-        # todo: 'vehicles_and_capacities' validation
-
         self.num_vertices = num_vertices
         self.num_warehouses = num_warehouses
         self.discharged_percent = discharged_percent
+        self.real_data = real_data
 
         self.edges_range= edges_range
         self.vertices_range = vertices_range
@@ -64,19 +64,19 @@ class Graph:
         self.list_warehouse_vertices = [WarehouseVertex(i, vehicles_and_capacities)
                                         for i in range(-self.num_warehouses + 1, 1)]
 
-        if generate_new_edges:
+        if generate_new_edges and not self.real_data:
             self.generate_and_write_edges_to_file(
                 min_weight=self.edges_range[0],
                 max_weight=self.edges_range[1]
             )
 
-        if generate_new_vertices:
+        if generate_new_vertices and not self.real_data:
             self.generate_and_write_vertices_to_file(
                 min_vert=self.vertices_range[0],
                 max_vert=self.vertices_range[1]
             )
 
-        if self.check_if_can_read():
+        if not self.real_data and self.check_if_can_read():
             raise ValueError("Incorrect parameters. Generate new valid graph or provide valid parameters.")
 
         self.graph = nx.complete_graph(self.num_vertices - self.num_warehouses + 1)
@@ -108,12 +108,13 @@ class Graph:
         if u == v:
             raise ValueError("Attempting to add self-loop edge.")
         else:
-            if self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1] != 0:
+            if not self.real_data and self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1] != 0:
                 raise ValueError("Attempting to add the existing edge.")
 
         self.graph.add_edge(u, v, weight=weight)
         self.adj_matrix[u + self.num_warehouses - 1][v + self.num_warehouses - 1] = weight
-        self.adj_matrix[v + self.num_warehouses - 1][u + self.num_warehouses - 1] = weight
+        if not self.real_data:
+            self.adj_matrix[v + self.num_warehouses - 1][u + self.num_warehouses - 1] = weight
 
     ###############
     # REMOVE_EDGE()
@@ -157,12 +158,16 @@ class Graph:
     def generate_and_write_vertices_to_file(self, min_vert=0, max_vert=10):
         with open(self.filename_vertices, 'w') as file:
             for _ in range(self.num_vertices - self.num_warehouses):
-                capacity = random.randint(min_vert, max_vert)
+                capacity = random.randint(2, max_vert)
+                stored = random.randint(min_vert, max_vert)
+                while stored == capacity:
+                    stored = random.randint(min_vert, max_vert)
+
                 if random.randint(1, 100) <= self.discharged_percent:
-                    discharged = random.randint(0, capacity)
+                    discharged = random.randint(0, stored)
                 else:
                     discharged = 0
-                stored = random.randint(min_vert, max_vert)
+
                 file.write(f"{discharged}, {capacity}, {stored}\n")
 
     ########################
@@ -265,11 +270,11 @@ class Graph:
 
         print("     ", end="")
         for vert in range(-self.num_warehouses + 1, self.num_vertices - self.num_warehouses + 1):
-            print(f"{vert:5}", end=" ")
+            print(f"{vert:7}", end=" ")
         print()
 
         for idx, row in enumerate(self.adj_matrix):
-            print(f"{idx - self.num_warehouses + 1:5}  {' '.join(f'{val:5}' for val in row)}")
+            print(f"{idx - self.num_warehouses + 1:7}  {' '.join(f'{val:7}' for val in row)}")
         print("\n")
 
     def print_client_vertices_params(self):
