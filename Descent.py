@@ -1,13 +1,4 @@
-from Enums import Neighborhood
-
-
-# Displaying descent algorithm output
-def display_solution(descent_instance):
-    print(f"BEST SOLUTION =  {descent_instance[0]}")
-    print(f"TOTAL COST = {descent_instance[1]}")
-    print("ROUTES (Index: Vehicle capacity | Initial bikes load | Initial batteries load | [Route]):")
-    for idx, route in enumerate(descent_instance[2]):
-        print(f"{idx:3}: {descent_instance[3][idx]:5} | {descent_instance[4][idx][0]:5}| {descent_instance[4][idx][1]:5} | {route}")
+from Utils import Neighborhood
 
 
 # Generating insert neighborhood
@@ -125,7 +116,7 @@ def descent_algorithm(graph, init_solution=None, neighborhood_type=Neighborhood.
                 route = solution[solution_begin:solution_idx+1]
                 route_load = init_load
                 solution_idx += 1
-            else: # init_load == 0
+            else:  # init_load == 0
                 solution_begin = solution_idx
 
                 if route is not None:
@@ -190,4 +181,3 @@ def descent_algorithm(graph, init_solution=None, neighborhood_type=Neighborhood.
         return solution_params[0]
     else:
         return solution_params
-

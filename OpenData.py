@@ -1,19 +1,21 @@
 import time
-
-from APIKEY import api_key
 import requests
 import random
 
-from Descent import display_solution
-from Enums import Algorithm, Neighborhood, Crossover
+from APIKEY import api_key
+from Utils import Algorithm, Neighborhood, Crossover, display_solution
 from Genetic import genetic_algorithm
 from Graph import Graph
 from HybridGenetic import hybrid_genetic_algorithm
 from MultistartDescent import multistart_descent
 from SimulatedAnnealing import simulated_annealing
 
+# OPEN DATA DOCUMENTATION
+# https://github.com/MobilityData/gbfs/blob/df473ca4adbff982d67b50ac00b625191591d8f8/gbfs.md
 
-def get_matching_station_informations(prefix, limit):
+
+# Getting matching station information by given prefix
+def get_matching_station_information(prefix, limit):
     print("STATION_INFORMATIONS")
 
     response = requests.get(
@@ -32,6 +34,7 @@ def get_matching_station_informations(prefix, limit):
                 break
 
 
+# Getting station status matching to station ID
 def get_matching_station_status(station_id):
     print("STATION STATUS")
 
@@ -49,10 +52,11 @@ def get_matching_station_status(station_id):
     return None
 
 
+# Extracting data from open data
 def extract_data(prefix, discharged_percent, limit=50):
     print("EXTRACT DATA")
 
-    station_informations = get_matching_station_informations(prefix, limit)
+    station_informations = get_matching_station_information(prefix, limit)
 
     locations = [
         (54.43776163146023, 18.577104753732144),  # warehouse no 1
@@ -86,8 +90,10 @@ def extract_data(prefix, discharged_percent, limit=50):
 
     with open("opendata/opendata_locations", 'w') as file:
         for i in range(num_locations):
-            print("ONE")
             file.write(f"{i - num_warehouses + 1}, {locations[i][0]}, {locations[i][1]}\n")
+
+
+# Computing distances between two locations using GoogleMaps API
 def compute_distance(loc1, loc2):
     print("COMPUTE DISTANCE")
 
@@ -123,20 +129,24 @@ graph = Graph(
     real_data=True
 )
 
-graph.print_adj_matrix()
-graph.print_client_vertices_params()
+# Displaying graph adjacency matrix
+# graph.print_adj_matrix()
 
+# Displaying client vertices params
+# graph.print_client_vertices_params()
+
+# Algorithm type
 # algorithm_type = Algorithm.MULTISTART_DESCENT
 # algorithm_type = Algorithm.SIMULATED_ANNEALING
 # algorithm_type = Algorithm.GENETIC_ALGORITHM
-algorithm_type = Algorithm.HYBRID_GENETIC_ALGORITHM
-# algorithm_type = Algorithm.ALL
+# algorithm_type = Algorithm.HYBRID_GENETIC_ALGORITHM
+algorithm_type = Algorithm.ALL
 
-time_limit = 9999999
-runs = 0
+time_limit = 3
+runs = 1
 
 if algorithm_type == Algorithm.MULTISTART_DESCENT or algorithm_type == Algorithm.ALL:
-    print("MD")
+    print("\nMultistart Descent")
 
     num_iterations = 30
     neighborhood_type = Neighborhood.INSERT
@@ -158,7 +168,7 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT or algorithm_type == Algorithm
 
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Czas działania algorytmu: {elapsed_time} sekund")
+            print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
             file.write(f"{i + 1}: {md_instance}\n")
@@ -176,11 +186,11 @@ if algorithm_type == Algorithm.MULTISTART_DESCENT or algorithm_type == Algorithm
             # graph.print_graph_and_routes(md_instance)
 
 if algorithm_type == Algorithm.SIMULATED_ANNEALING or algorithm_type == Algorithm.ALL:
-    print("SA")
+    print("\nSimulated ANNEALING")
 
     num_iterations = 300
-    initial_temperature = 120  # 50 # 120 # 220
-    final_temperature = 10  # 1 # 10 # 15
+    initial_temperature = 120
+    final_temperature = 10
 
     # neighborhood_type = Neighborhood.INSERT
     neighborhood_type = Neighborhood.SWAP
@@ -203,7 +213,7 @@ if algorithm_type == Algorithm.SIMULATED_ANNEALING or algorithm_type == Algorith
 
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Czas działania algorytmu: {elapsed_time} sekund")
+            print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
             file.write(f"{sa_instance[1]}\n")
@@ -221,11 +231,11 @@ if algorithm_type == Algorithm.SIMULATED_ANNEALING or algorithm_type == Algorith
             # graph.print_graph_and_routes(sa_instance)
 
 if algorithm_type == Algorithm.GENETIC_ALGORITHM or algorithm_type == Algorithm.ALL:
-    print("GA")
+    print("\nGENETIC ALGORITHM")
 
-    num_generations = 30  # todo: dodac w pracy
-    crossover_type = Crossover.ORDER_CROSSOVER
-    # crossover_type = Crossover.SINGLE_POINT_CROSSOVER
+    num_generations = 30
+    # crossover_type = Crossover.ORDER_CROSSOVER
+    crossover_type = Crossover.SINGLE_POINT_CROSSOVER
 
     with open("output/ga.txt", 'w') as file:
         for i in range(runs):
@@ -242,7 +252,7 @@ if algorithm_type == Algorithm.GENETIC_ALGORITHM or algorithm_type == Algorithm.
 
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Czas działania algorytmu: {elapsed_time} sekund")
+            print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
             file.write(f"{i + 1}:\n {ga_instance}\n {all_solutions}\n\n")
@@ -260,11 +270,11 @@ if algorithm_type == Algorithm.GENETIC_ALGORITHM or algorithm_type == Algorithm.
             # graph.print_graph_and_routes(ga_instance)
 
 if algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM or algorithm_type == Algorithm.ALL:
-    print("HG")
+    print("\nDESCENT GENETIC ALGORITHM")
 
-    num_generations = 70  # todo: dodac w pracy
-    crossover_type = Crossover.ORDER_CROSSOVER
-    # crossover_type = Crossover.SINGLE_POINT_CROSSOVER
+    num_generations = 100
+    # crossover_type = Crossover.ORDER_CROSSOVER
+    crossover_type = Crossover.SINGLE_POINT_CROSSOVER
     # neighborhood_type = Neighborhood.INSERT
     neighborhood_type = Neighborhood.SWAP
 
@@ -285,7 +295,7 @@ if algorithm_type == Algorithm.HYBRID_GENETIC_ALGORITHM or algorithm_type == Alg
 
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Czas działania algorytmu: {elapsed_time} sekund")
+            print(f"Algorithm runtime: {elapsed_time} seconds")
 
             # Write to file
             file.write(f"{i + 1}: {hg_instance}\n")

@@ -3,16 +3,6 @@ import random
 import math
 
 
-# Displaying descent algorithm output
-def display_solution(descent_instance):
-    print(f"BEST SOLUTION =  {descent_instance[0]}")
-    print(f"TOTAL COST = {descent_instance[1]}")
-    print("ROUTES (Index: Vehicle capacity | Initial vehicle load | [Route]):")
-    for idx, route in enumerate(descent_instance[2]):
-        print(f"{idx:3}: {descent_instance[3][idx]:5} | {descent_instance[4][idx]:5} | {route}")
-        # print(f"{idx}: {route} | {descent_instance[3][idx]} | {descent_instance[4][idx]} ")
-
-
 # Generating insert neighborhood
 def generate_insert_neighborhood(solution):  # size: (n - 1)^2
     neighborhood = []
@@ -43,6 +33,7 @@ def generate_swap_neighborhood(solution):  # size: n(n - 1)/2
 def accept_with_probability(probability):
     return random.random() < probability
 
+
 # Simulated annealing
 def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, final_temperature, neighborhood_type):
 
@@ -64,7 +55,7 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
 
         # Check number of batteries
         if discharged > chosen_vehicle.capacity:
-            return 0
+            return None
 
         for idx, demand in enumerate(demands):
             if demand > 0:
@@ -92,18 +83,16 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
         # Vehicle load check
         for current_load in current_loads:
             if current_load * 5 > chosen_vehicle.capacity - discharged:
-                return 0
+                return None
 
         # Route simulating
         vehicle_load = initial_load * 5
         for demand in demands:
             if vehicle_load > chosen_vehicle.capacity - discharged:
-                return 0  # False
+                return None
             vehicle_load -= demand * 5
 
-        return initial_load + 1  # True
-                                 # initial_load = [0, vehicle_capacity]
-                                 # initial_load + 1 = [1, vehicle_capacity + 1]
+        return [initial_load, discharged]
 
     # Creating route, adding warehouses to both ends
     def create_route(route, warehouse):
@@ -127,12 +116,12 @@ def simulated_annealing(graph, num_iterations, time_limit, initial_temperature, 
         while solution_idx < len(solution):
             init_load = check_if_can_serve(solution[solution_begin:solution_idx + 1], chosen_vehicle)
 
-            if init_load:
+            if init_load is not None:
                 if route is None:
                     vehicles.append(chosen_vehicle.capacity)
 
                 route = solution[solution_begin:solution_idx + 1]
-                route_load = init_load - 1
+                route_load = init_load
                 solution_idx += 1
             else:  # init_load == 0
                 solution_begin = solution_idx

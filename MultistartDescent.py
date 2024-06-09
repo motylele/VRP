@@ -1,4 +1,4 @@
-from Descent import descent_algorithm, Neighborhood
+from Descent import descent_algorithm
 import time
 
 

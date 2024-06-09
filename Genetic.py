@@ -1,4 +1,4 @@
-from Enums import Crossover
+from Utils import Crossover
 import warnings
 import pygad
 import numpy
@@ -6,6 +6,7 @@ import time
 
 # Ignore constant warning
 warnings.filterwarnings("ignore", message="The 'delay_after_gen' parameter is deprecated*")
+
 
 def genetic_algorithm(
         graph,
@@ -18,11 +19,11 @@ def genetic_algorithm(
 
     # Global list to store best solution
     solution_params = (
-        [],  # solution
+        [],             # solution
         float('-inf'),  # solution_val
-        [],  # solution_routes
-        [],  # solution_vehicles
-        []  # solution_init_loads
+        [],             # solution_routes
+        [],             # solution_vehicles
+        []              # solution_init_loads
     )
 
     all_solutions = []
@@ -45,7 +46,7 @@ def genetic_algorithm(
 
         # Check number of batteries
         if discharged > chosen_vehicle.capacity:
-            return 0
+            return None
 
         for idx, demand in enumerate(demands):
             if demand > 0:
@@ -73,23 +74,22 @@ def genetic_algorithm(
         # Vehicle load check
         for current_load in current_loads:
             if current_load * 5 > chosen_vehicle.capacity - discharged:
-                return 0
+                return None
 
         # Route simulating
         vehicle_load = initial_load * 5
         for demand in demands:
             if vehicle_load > chosen_vehicle.capacity - discharged:
-                return 0  # False
+                return None
             vehicle_load -= demand * 5
 
-        return initial_load + 1  # True
-                                 # initial_load = [0, vehicle_capacity]
-                                 # initial_load + 1 = [1, vehicle_capacity + 1]
+        return [initial_load, discharged]
 
     # Creating route, adding warehouses to both ends
     def create_route(route, warehouse):
         return [warehouse.index] + list(route) + [warehouse.index]
 
+    # Roulette selection method
     def roulette_selection(fitness, num_parents, ga_instance):
         total_fitness = numpy.sum(fitness)
 
@@ -100,6 +100,7 @@ def genetic_algorithm(
 
         return selected_parents, selected_indices
 
+    # modified 1PX crossover
     def one_point_crossover(parents, offspring_size, ga_instance):
         offspring = []
         idx = 0
@@ -117,6 +118,7 @@ def genetic_algorithm(
 
         return numpy.array(offspring)
 
+    # OX crossover
     def order_crossover(parents, offspring_size, ga_instance):
         offspring = []
         idx = 0
@@ -144,10 +146,12 @@ def genetic_algorithm(
 
         return numpy.array(offspring)
 
+    # Stop algorithm on given time
     def stop_at_generation(ga_instance):
         if time.time() - time_start >= time_limit:
             return "stop"
 
+    # Setting proper population size, depending on chromosome len
     def calculate_population_size(chromosome_length):
         coefficient = 3
         offset = 10
@@ -178,14 +182,14 @@ def genetic_algorithm(
         while solution_idx < len(solution):
             init_load = check_if_can_serve(solution[solution_begin:solution_idx+1], chosen_vehicle)
 
-            if init_load:
+            if init_load is not None:
                 if route is None:
                     vehicles.append(chosen_vehicle.capacity)
 
                 route = solution[solution_begin:solution_idx+1]
-                route_load = init_load - 1
+                route_load = init_load
                 solution_idx += 1
-            else: # init_load == 0
+            else:  # init_load == 0
                 solution_begin = solution_idx
 
                 if route is not None:
@@ -223,11 +227,9 @@ def genetic_algorithm(
             )
             all_solutions.append(fitness_value)
 
-
         return fitness_value
 
     # Genetic algorithm
-
     crossover = None
     gene_space = None
 
@@ -264,10 +266,5 @@ def genetic_algorithm(
 
     time_start = time.time()
     ga_instance.run()
-
-    # solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
-    # print(f"Parameters of the best solution : {solution}")
-    # print(f"Fitness value of the best solution = {solution_fitness}")
-    # print(f"Index of the best solution : {solution_idx}")
 
     return solution_params, all_solutions

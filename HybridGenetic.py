@@ -1,5 +1,5 @@
 from Descent import descent_algorithm
-from Enums import Crossover, Neighborhood
+from Utils import Crossover
 import warnings
 import pygad
 import numpy
@@ -7,6 +7,7 @@ import time
 
 # Ignore constant warning
 warnings.filterwarnings("ignore", message="The 'delay_after_gen' parameter is deprecated*")
+
 
 def hybrid_genetic_algorithm(
         graph,
@@ -48,7 +49,7 @@ def hybrid_genetic_algorithm(
 
         # Check number of batteries
         if discharged > chosen_vehicle.capacity:
-            return 0
+            return None
 
         for idx, demand in enumerate(demands):
             if demand > 0:
@@ -76,29 +77,29 @@ def hybrid_genetic_algorithm(
         # Vehicle load check
         for current_load in current_loads:
             if current_load * 5 > chosen_vehicle.capacity - discharged:
-                return 0
+                return None
 
         # Route simulating
         vehicle_load = initial_load * 5
         for demand in demands:
             if vehicle_load > chosen_vehicle.capacity - discharged:
-                return 0  # False
+                return None
             vehicle_load -= demand * 5
 
-        return initial_load + 1  # True
-                                 # initial_load = [0, vehicle_capacity]
-                                 # initial_load + 1 = [1, vehicle_capacity + 1]
+        return [initial_load, discharged]
 
     # Creating route, adding warehouses to both ends
     def create_route(route, warehouse):
         return [warehouse.index] + list(route) + [warehouse.index]
 
+    # Calculating population size, depending on chromosome len
     def calculate_population_size(chromosome_length):
         coefficient = 3
         offset = 10
         population_size = int(coefficient * chromosome_length + offset)
         return population_size
 
+    # Roulette selection method
     def roulette_selection(fitness, num_parents, ga_instance):
         total_fitness = numpy.sum(fitness)
 
@@ -109,6 +110,7 @@ def hybrid_genetic_algorithm(
 
         return selected_parents, selected_indices
 
+    # Modified 1PX crossover
     def one_point_crossover(parents, offspring_size, ga_instance):
         offspring = []
         idx = 0
@@ -126,6 +128,7 @@ def hybrid_genetic_algorithm(
 
         return numpy.array(offspring)
 
+    # OX crossover
     def order_crossover(parents, offspring_size, ga_instance):
         offspring = []
         idx = 0
@@ -153,10 +156,12 @@ def hybrid_genetic_algorithm(
 
         return numpy.array(offspring)
 
+    # Stop algorithm by given time
     def on_generation(ga_instance):
         if time.time() - time_start >= time_limit:
             return "stop"
 
+    # Call descent_algorithm() for a given percent of GA solutions
     def on_mutation(ga_instance, offspring_mutation):
         num_to_modify = int(len(offspring_mutation) * descent_percent / 100)
         selected_indices = numpy.random.choice(len(offspring_mutation), num_to_modify, replace=False)
@@ -216,14 +221,14 @@ def hybrid_genetic_algorithm(
         while solution_idx < len(solution):
             init_load = check_if_can_serve(solution[solution_begin:solution_idx+1], chosen_vehicle)
 
-            if init_load:
+            if init_load is not None:
                 if route is None:
                     vehicles.append(chosen_vehicle.capacity)
 
                 route = solution[solution_begin:solution_idx+1]
-                route_load = init_load - 1
+                route_load = init_load
                 solution_idx += 1
-            else: # init_load == 0
+            else:  # init_load == 0
                 solution_begin = solution_idx
 
                 if route is not None:
@@ -301,10 +306,5 @@ def hybrid_genetic_algorithm(
 
     time_start = time.time()
     ga_instance.run()
-
-    # solution, solution_fitness, solution_idx = ga_instance.best_solution(ga_instance.last_generation_fitness)
-    # print(f"Parameters of the best solution : {solution}")
-    # print(f"Fitness value of the best solution = {solution_fitness}")
-    # print(f"Index of the best solution : {solution_idx}")
 
     return solution_params, all_solutions
