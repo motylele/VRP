@@ -77,6 +77,6 @@ ROUTES (Index: Vehicle capacity (bat.) | Initial bikes load | Initial batteries 
 ### Comment
 The algorithm determined the permutation (2, 4, 5, 1, 3), for which two routes were planned with a total travel distance of 18.22. The first route starts at depot 0 and travels throuth vertices 2, 4, 5, 1, and returns to the same depot. It is serviced by a vehicle with a capacity of 15 bicycles (75 batteries). The initial load of this vehicle for serving the first route is 10 bicycles and 6 batteries. The second route covers path -1, 3, -1, serviced by a vehicle with the same capacity and initial load of 8 bicycles and 0 batteries.
 
-## Open data repository:
+## Open data repository
 https://github.com/MobilityData/gbfs
 
